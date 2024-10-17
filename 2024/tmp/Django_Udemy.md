@@ -318,3 +318,619 @@ INSTALLED_APPS = [
         model = TodoModel
     ```
     - DetailViewではobjectという名称でモデルの値を取れる
+
+- 画面で入力した値を元にタスクの色を変更する挙動を実装
+    - まずmodelにpriorityというフィールドを作成
+    - CharFieldのアプションにchoicesというタプルのリストを追加してあげる
+    - 右が画面に出る値。左が登録される値。
+    　```py
+
+    from django.db import models
+
+    CHOICE = (('danger', 'high'),('warning','normal'),('primary','low'))
+    # Create your models here.
+    class TodoModel(models.Model):
+        title = models.CharField(max_length=100)
+        memo = models.TextField()
+        priority = models.CharField(
+            max_length=50,
+            choices = CHOICE)
+        def __str__(self):
+            return self.title
+    ```
+    - htmlファイルで{{}}を使ってpriorityフィールドの値をそのままbootstrapのクラス名として使って色を制御する流れ。
+    ```html
+     <div class="alert alert-{{ item.priority }}" role="alert">
+        <p>
+            {{ item.title}}
+        </p>
+        <a class="btn btn-info " role="button" aria-disabled="true">編集画面へ</a>
+        <a class="btn btn-success " role="button" aria-disabled="true">削除画面へ</a>
+        <a class="btn btn-primary " role="button" aria-disabled="true">詳細画面へ</a>
+    </div>
+    ```
+- CreateView
+    - まずurls.pyにcreateのパth（）を記載する
+    ```py
+
+    from django.contrib import admin
+    from django.urls import include, path
+    from .views import TodoList, TodoDetail, TodoCreate
+    urlpatterns = [
+        path('list/', TodoList.as_view() ),
+        path('detail/<int:pk>', TodoDetail.as_view() ),
+        path('create/', TodoCreate.as_view() ),
+    ]
+    ```
+
+    - 次にviews.pyにTodoCreateのクラスベースドビューを作る。
+    - この際に、CreateViewを使ったクラスベースドビュー内では、fields というオプションを記載する必要がある。このフィールドに画面から入力するフィールドを記載する。
+    このfieldsがないとエラーになる
+    ```py
+    from django.views.generic import ListView, DetailView, CreateView
+    from django.shortcuts import render
+    from todo.models import TodoModel
+
+    # Create your views here.
+    class TodoList(ListView):
+        template_name ='list.html'
+        model = TodoModel
+
+    class TodoDetail(DetailView):
+        template_name ='detail.html'
+        model = TodoModel
+
+    class TodoCreate(CreateView):
+        template_name ='create.html'
+        model = TodoModel
+        fields = ('title','memo','priority','duedate')
+    ```
+
+    - 最後にhtmlを作成する。
+        - {{ form.as_p}}を書かないと↑で指定したfieldsの入力欄が出てこないので注意。
+        - csrfのやつも忘れずに書く
+        - 以下の状態でもまだエラーが出る
+    ```html
+    {% extends 'base.html' %}
+
+    {% block content %}
+    <form action="" method="POST"> {% csrf_token %} 
+        {{ form.as_p }}
+        <input type="submit" value="create">
+    </form>
+    {% endblock content %}
+    ```
+    - サブミット後の遷移先の画面はどこに行けばいいかわかりませんってエラーが出る。
+        - なので遷移先をしていしてあげる。
+            - success_urlを指定してあげる(これで遷移先の画面を設定できる。)
+        ```py
+        class TodoCreate(CreateView):
+            template_name ='create.html'
+            model = TodoModel
+            fields = ('title','memo','priority','duedate')
+            success_url = reverse_lazy('list')
+        ```
+        - 引数のlistってのはurls.pyのpath()メソッドないのnameオプションを指す。
+        ```py
+        from django.contrib import admin
+        from django.urls import include, path
+        from .views import TodoList, TodoDetail, TodoCreate
+        urlpatterns = [
+            path('list/', TodoList.as_view(), name='list' ),
+            path('detail/<int:pk>', TodoDetail.as_view(), name='detail'),
+            path('create/', TodoCreate.as_view(),name='create' ),
+        ]
+        ```
+- DeleteView
+    - まずurls.pyを修正する
+    ```py
+    from django.contrib import admin
+    from django.urls import include, path
+    from .views import TodoList, TodoDetail, TodoCreate, TodoDelete
+    urlpatterns = [
+        path('list/', TodoList.as_view(), name='list' ),
+        path('detail/<int:pk>', TodoDetail.as_view(), name='detail'),
+        path('create/', TodoCreate.as_view(),name='create' ),
+        path('delete/<int:pk>', TodoDelete.as_view(),name='delete' ),
+    ]
+    ```
+    - views.pyを修正
+    ```py
+    class TodoDelete(DeleteView):
+        template_name ='delete.html'
+        model = TodoModel
+        success_url = reverse_lazy('list')
+    ```
+
+    - delete.htmlを作成
+    ```html
+    {% extends 'base.html' %}
+
+    {% block content %}
+    <form action="" method="POST"> {% csrf_token %} 
+        <input type="submit" value="delete">
+    </form>
+    {% endblock content %}
+    ```
+- UpdateView
+    - urls.pyに追加
+    ```py
+    path('update/<int:pk>', TodoUpdate.as_view(),name='update' ),
+    ```
+    - view.pyに追加
+    ```py
+    class TodoUpdate(UpdateView):
+    template_name ='update.html'
+    model = TodoModel
+    fields = ('title','memo','priority','duedate')
+    success_url = reverse_lazy('list')
+    ```
+    - htmlファイルを記載
+    ```html
+    {% extends 'base.html' %}
+
+    {% block content %}
+    <form action="" method="POST"> {% csrf_token %} 
+        {{ form.as_p }}
+        <input type="submit" value="update">
+    </form>
+    {% endblock content %}
+    ```
+
+- ボタンの遷移先（aタグのhref属性）を設定する
+    - 以下の形で、{% url 'update' item.pk %}という感じで書く。
+        - 'update'のところはurls.pyのname属性の値を指定する。 
+    ```html
+    {% extends 'base.html'%}
+
+    {% block header %}
+    <div class="p-5 mb-4 bg-body-tertiary rounded-3">
+        <div class="container-fluid py-5">
+        <h1 class="display-5 fw-bold">TodoList</h1>
+        <p class="col-md-8 fs-4">TodoListを作成して生産的な毎日を過ごしましょう</p>
+        </div>
+    </div>
+
+    {% endblock header%}
+
+    {% block content%}
+    <div class="container">
+
+        {% for item in object_list %}
+        <div class="alert alert-{{ item.priority }}" role="alert">
+            <p>
+                {{ item.title}}
+            </p>
+            <a href="{% url 'update' item.pk %}" class="btn btn-info " role="button" aria-disabled="true">編集画面へ</a>
+            <a href="{% url 'delete' item.pk %}" class="btn btn-success " role="button" aria-disabled="true">削除画面へ</a>
+            <a href="{% url 'detail' item.pk %}" class="btn btn-primary " role="button" aria-disabled="true">詳細画面へ</a>
+        </div>
+        {% endfor %}
+    </div>
+    {% endblock content%}
+
+    ```
+
+    - DONE!!!
+
+
+## 社内SNSアプリ
+
+
+- まずsetting.pyのTEMPLATESのDIRSを設定する。（htmlなどのファイルの保存場所を指定する）
+- BASE_DIRのtemplatesというディレクトリにhtmlを保存するという意味。
+    - すなわちmanage.pyファイルのある階層にtemplatsディレクトリを作成する。
+```py
+TEMPLATES = [
+    {
+        'BACKEND': 'django.template.backends.django.DjangoTemplates',
+        'DIRS': [BASE_DIR / 'templates'],
+        'APP_DIRS': True,
+        'OPTIONS': {
+            'context_processors': [
+                'django.template.context_processors.debug',
+                'django.template.context_processors.request',
+                'django.contrib.auth.context_processors.auth',
+                'django.contrib.messages.context_processors.messages',
+            ],
+        },
+    },
+]
+```
+
+- 次にstartappコマンドで作ったtodoAppというアプリケーションを作ったよってことをDjangoに知らせる。
+
+
+```py
+INSTALLED_APPS = [
+    'django.contrib.admin',
+    'django.contrib.auth',
+    'django.contrib.contenttypes',
+    'django.contrib.sessions',
+    'django.contrib.messages',
+    'django.contrib.staticfiles',
+    'boardapp.apps.BoardappConfig'
+]
+```
+
+
+- projectのurls.pyにadmin以外のURLが来た際にアプリのurlに飛ぶように設定
+```py
+from django.contrib import admin
+from django.urls import include, path
+
+urlpatterns = [
+    path('admin/', admin.site.urls),
+    path('', include('boardapp.urls')),
+]
+```
+
+- todoアプリの時はクラスベースおビューを使ったが、今回はファンクションベースドビューを使っていく。
+- signupが画面の作成
+    - まずappのurls.pyにpath()を追加。
+        - 第二引数はviews.pyに書くファンクションベースドビューの関数名を記載
+    ```py
+    from django.contrib import admin
+    from django.urls import path
+    from .views import signupfunc
+
+    urlpatterns = [
+        path('signup/', signupfunc),
+    ]
+    ```
+    - 次にappのviews.pyにファンクションベースドビューを記載
+        - render()の引数はrequest,html,modelの順で記載
+        - request.methodでGETかPOSTかを判定
+    ```py
+    
+    def signupfunc(request):
+        # return HttpResponse("aaaa")
+        if request.method == 'POST':
+            print("this is post")
+        else:
+            print("this is not post")
+            
+        return render(request, 'signup.html', {'some':100})
+    ```
+
+    - User.objects.all()でUserテーブルの値を全て取得
+    - User.objects.get()でUserテーブルのレコードを指定して取得
+    ```py
+
+    from django.contrib.auth.models import User
+
+    def signupfunc(request):
+        object_list  = User.objects.all()
+        userdamdin  = User.objects.get(username='admin')
+        print(object_list)
+        print(userdamdin)
+        print(userdamdin.email)
+        if request.method == 'POST':
+            print("this is post")
+        else:
+            print("this is not post")
+
+        return render(request, 'signup.html', {'some':100})
+    ```
+
+    - 画面でformのPOSTで投げた値は、request.POST[〇〇]で取得できる
+    - User.objects.create_user()でユーザを登録できる
+    - 登録できなかった場合はrender()でデータでerrorを返してhtml側で{{ error }}でエラーメッセージを表示する。
+    ```py
+    from django.shortcuts import render
+    from django.contrib.auth.models import User
+    def signupfunc(request):
+        if request.method == 'POST':
+            username = request.POST['username']
+            password = request.POST['password']
+            try:
+                user = User.objects.create_user(username, 'aaa@example.com', password)
+            except IntegrityError:
+                return render(request, 'signup.html',{'error':'このユーザはすでに登録されています'})
+
+        else:
+            print("this is not post")
+        return render(request, 'signup.html', {'some':100})
+
+    ```
+- ログイン
+    - ログイン処理
+        - authenticateメソッドを使う。
+    ```py
+    def loginfunc(request):
+    if request.method == 'POST':
+        username = request.POST["username"]
+        password = request.POST["password"]
+        user = authenticate(request, username=username, password=password)
+        if user is not None:
+            login(request, user)
+            return render(request, 'login.html', {'context':'logged in !!'})
+        else:
+            return render(request, 'login.html', {'context':' not logged in !!'})
+
+    return render(request, 'login.html', {'context':'get method '})
+    ```
+
+
+- render→違うビューを呼び出さない。
+- redirect→違うビューを呼び出す。
+    - redirect()ではurls.pyのｎame属性を指定
+    - 何らかの処理が終わって違う画面に遷移する際に使う
+
+- makemigrations→マイグレーションファイルを作成
+- migrate→実際もDBに反映
+- Modelを作成したあとはappのadmin.pyに以下の設定を記載(modelを登録する)
+    ```py
+    from django.contrib import admin
+
+    from boardapp.models import BoardModel
+
+    # Register your models here.
+    admin.site.register(BoardModel)
+    ```
+
+
+- modelsから撮った値を画面に渡して表示
+    ```py
+    def listfunc(request):
+        object_list = BoardModel.objects.all()
+        return render(request, 'list.html', {'object_list':object_list})
+    ```
+
+    ```html
+    {% extends 'base.html'%}
+
+    {% block header %}
+    <div class="alert alert-primary" role="alert">
+        <h3>
+            社内SNS
+        </h3>
+        </div>
+    {% endblock header %}
+
+    {% block content %}
+    <div class="container">
+        {% for item in object_list %}
+        <div class="alert alert-success" role="alert">
+            <p>タイトル :{{item.title}} </p>
+            <p>投稿者 : {{item.author}}</p>
+            <a class="btn btn-primary " role="button" aria-disabled="true">Primary link</a>
+            <a class="btn btn-secondary " role="button" aria-disabled="true">Link</a>
+        </div>
+        {% endfor %}
+    </div>
+    {% endblock content %}
+    ```
+
+- 画像の取り扱い
+    - projectのsettings.pyに以下の設定を記載
+    - MEDIA_ROOTはメディアふぁいるを保存する場所を指定(tempaltesの設定を同じ容量で)
+    - MEDIA＿URLはurlと画像のファイルを結びつける
+    ```py
+
+        MEDIA_ROOT = BASE_DIR/ 'media'
+        MEDIA_URL = 'medi/'
+    ```
+
+    - static()では第一引数が入力されたときに、第二引数の場所から画像を持ってくる
+    - adminの画面で画像名称クリックの際に以下のようのURLが飛ぶ
+    - MEDIA_URLの値がパスに含まれる。
+    ```
+    http://localhost:8000/medi/スクリーンショット_2024-10-06_11.13.52.png
+    ```
+    ```py
+    from django.contrib import admin
+    from django.urls import include, path
+
+    from boardproject import settings
+
+    urlpatterns = [
+        path('admin/', admin.site.urls),
+        path('', include('boardapp.urls')),
+    ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+    ```
+
+
+- 静的ファイルの取り扱い
+    - projectのurls.pyに以下を追加
+    ```py
+    from django.contrib import admin
+    from django.urls import include, path
+    from django.conf import settings
+    from django.conf.urls.static import static
+
+    urlpatterns = [
+        path('admin/', admin.site.urls),
+        path('', include('boardapp.urls')),
+    ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+    + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
+
+    ```
+    - projectのsettings.pyに以下を追記
+    ```py
+        #本番環境に適用するために使われDIRSのファイルを全てここにコピーする
+        STATIC_ROOT = BASE_DIR/ 'staticfiles/'
+
+        STATIC_URL = 'sta/'
+        STATICFILES_DIRS = [str(BASE_DIR / 'static')]#複数のアプリ用いるcss
+
+    ```
+
+    - html では以下のようにhrefで呼び出して使う
+    ```html
+    <link href="{static 'style.css' }" rel="stylesheet">
+    ```
+
+- ログイン状態を判定する機能２種類
+    - ①login_requredデコレータ
+        - デコレータ → その関数が呼びだされる前に実行されるもの
+        - view.pyで以下のようにビューにつけるだけ。
+        ```txt
+        login_required() は下記の処理を行います:
+        もしユーザがログインしていなければ、settings.LOGIN_URL にリダイレクトし、クエリ文字列に現在の絶対パスを渡します。リダイレクト先の例: /accounts/login/?next=/polls/3/
+        もしユーザがログインしていれば、通常通りビューを処理します。ビューの
+        ```
+        ```py
+        @login_required
+        def listfunc(request):
+            object_list = BoardModel.objects.all()
+            return render(request, 'list.html', {'object_list':object_list})
+        ```
+
+        - projectのsettings.pynにも以下を記載
+        ```py
+        LOGIN_URL = 'login'
+        ```
+
+        - login_requiredデコレータをつけたビュー関数が、ログインしてない状態だとLOGIN_URLの値をｎame属性にもつpath()にいき、ログインしているなら通常通りそのビュー関数を実行する
+
+    - ② テンプレートの中に書いていく
+        - 以下のような感じでテンプレートに{% if user.is_authenticated%}を使って条件分岐する
+    ```html
+    {% block content %}
+    {% if user.is_authenticated%}
+    <div class="container">
+        {% for item in object_list %}
+        <div class="alert alert-success" role="alert">
+            <p>タイトル :{{item.title}} </p>
+            <p>投稿者 : {{item.author}}</p>
+            <a class="btn btn-primary " role="button" aria-disabled="true">Primary link</a>
+            <a class="btn btn-secondary " role="button" aria-disabled="true">Link</a>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    please login
+
+    {% endif %}
+    {% endblock content %}
+    ```
+
+- ログアウト機能
+    - ログアウトのpathを呼び出すボタンを作る。
+    ```
+        #この部分
+        <a href="{%url 'logout'%}">logout</a>
+    ```
+    ```html
+    {% extends 'base.html'%}
+
+    {% block header %}
+    <div class="alert alert-primary" role="alert">
+        <h3>
+            社内SNS
+        </h3>
+        </div>
+    {% endblock header %}
+
+    {% block content %}
+    {% if user.is_authenticated%}
+    <div class="container">
+        {% for item in object_list %}
+        <div class="alert alert-success" role="alert">
+            <p>タイトル :{{item.title}} </p>
+            <p>投稿者 : {{item.author}}</p>
+            <a class="btn btn-primary " role="button" aria-disabled="true">Primary link</a>
+            <a class="btn btn-secondary " role="button" aria-disabled="true">Link</a>
+        </div>
+        {% endfor %}
+        <a href="{%url 'logout'%}">logout</a>
+    </div>
+    {% else %}
+    please login
+    {% endif %}
+    {% endblock content %}
+    ```
+
+    - urls.pyに以下のpath()を追加する
+    ```py
+    path('logout/', logoutfunc, name="logout"),
+    ```
+
+    - ビューに以下を追加して完成
+    ```py
+    def logoutfunc(request):
+        logout(request)
+        return redirect('login')
+    ```
+- 詳細画面の作成
+
+    - まずpath()の作成
+    ```py
+    path('detail/<int:pk>', detailfunc, name="detail"),
+    ```
+
+    - 次にviewの作成
+    ```py
+    def detailfunc(request, pk):
+        object = get_object_or_404(BoardModel, pk=pk)
+        return render(request, 'detail.html', {'object':object})
+    ```
+
+    - htmlの作成(detail.html)
+    - 画像を表示する部分はちょっと注意
+    ```
+     src="{{object.sns_image.url}}"
+    ```
+
+    ```html
+    {% extends 'base.html'%}
+    {% block header %}
+    <div class="alert alert-primary" role="alert">
+        <h3>
+            detailpage
+        </h3>
+        </div>
+    {% endblock header %}
+    {% block content %}
+    {% if user.is_authenticated%}
+    <div class="container">
+        <div class="alert alert-success" role="alert">
+            <p>タイトル :{{object.title}} </p>
+            <p>投稿者 : {{object.author}}</p>
+            <p><img src="{{object.sns_image.url}}" width="400" alt=""></p>
+            <a class="btn btn-primary " role="button" aria-disabled="true">いいねする</a>
+            <a class="btn btn-secondary " role="button" aria-disabled="true">既読にする</a>
+        </div>
+    </div>
+    {% else %}
+    please login
+    {% endif %}
+    {% endblock content %}
+    ```
+
+- list画面の各要素をクリック時に詳細に遷移する
+    - 以下のように、aタグを追記。hrefにdetailのビューを呼ぶ記述追加。pkも渡すこと。
+    ```html
+    <p>タイトル :<a href="{% url 'detail' item.pk %}">{{item.title}}</a>  </p>
+    ```
+
+- いいね機能
+    - まずｐath()を作成
+    ```py
+
+    path('good/<int:pk>', goodfunc, name="good")
+    ```
+
+    - 次にviewを作成
+    ```py
+    def goodfunc(request, pk):
+        object = BoardModel.objects.get(pk=pk)
+        object.good += 1
+        object.save()
+        return redirect('list')
+    ```
+
+    - detail画面のいいねボタンにaタグで以下のようにhrefを記載
+    ```html
+    <a href="{% url 'good' object.pk %}" class="btn btn-primary " role="button" aria-disabled="true">いいねする</a>
+        
+    ```
+
+
+- 既読機能
+
+
+
+- nullはDBに入ってくる値の話
+- blankはformで入力の際の話
