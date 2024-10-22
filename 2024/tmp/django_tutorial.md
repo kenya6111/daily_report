@@ -352,8 +352,176 @@ urlpatterns = [
 <li><a href="{% url 'polls:detail' question.id %}">{{ question.question_text }}</a></li>
 ```
 ## はじめての Django アプリ作成、その 4
+
+- polls/templates/polls/detail.htmlを以下のように修正
+    - legend
+        - <fieldset>でグループ化されたフォームの入力項目に対して、タイトルを付けるためのタグ。
+    - forloop.counter は、 for タグのループが何度実行されたかを表す値。
+    
+```html
+<form action="{% url 'polls:vote' question.id %}" method="post">
+{% csrf_token %}
+<fieldset>
+    <legend><h1>{{ question.question_text }}</h1></legend>
+    {% if error_message %}<p><strong>{{ error_message }}</strong></p>{% endif %}
+    {% for choice in question.choice_set.all %}
+        <input type="radio" name="choice" id="choice{{ forloop.counter }}" value="{{ choice.id }}">
+        <label for="choice{{ forloop.counter }}">{{ choice.choice_text }}</label><br>
+    {% endfor %}
+</fieldset>
+
+<input type="submit" value="Vote">
+</form>
+```
+
+
+- polls/views.pyのvote関数を以下のように修正
+```py
+from django.http import HttpResponse, HttpResponseRedirect
+from django.shortcuts import get_object_or_404, render
+from django.urls import reverse
+
+from .models import Choice, Question
+
+
+# ...
+def vote(request, question_id):
+    question = get_object_or_404(Question, pk=question_id)
+    try:
+        selected_choice = question.choice_set.get(pk=request.POST["choice"])
+    except (KeyError, Choice.DoesNotExist):
+        # Redisplay the question voting form.
+        return render(
+            request,
+            "polls/detail.html",
+            {
+                "question": question,
+                "error_message": "You didn't select a choice.",
+            },
+        )
+    else:
+        selected_choice.votes += 1
+        selected_choice.save()
+        # Always return an HttpResponseRedirect after successfully dealing
+        # with POST data. This prevents data from being posted twice if a
+        # user hits the Back button.
+        return HttpResponseRedirect(reverse("polls:results", args=(question.id,)))
+```
+
+- polls/view.pyに以下の関数を追加
+```py
+def results(request, question_id):
+    # response = "You're looking at the results of question %s."
+    # return HttpResponse(response % question_id)
+    question = get_object_or_404(Question, pk=question_id)
+    return render(request, "polls/results.html", {"question": question})
+```
+
+- polls/templates/polls/results.htmlを作成
+
+```html
+<h1>{{ question.question_text }}</h1>
+
+<ul>
+{% for choice in question.choice_set.all %}
+    <li>{{ choice.choice_text }} -- {{ choice.votes }} vote{{ choice.votes|pluralize }}</li>
+{% endfor %}
+</ul>
+
+<a href="{% url 'polls:detail' question.id %}">Vote again?</a>
+```
+
+
+- polls/urls.pyを以下のように修正( <question_id> から <pk> に変更)
+
+```py
+from django.urls import path
+
+from . import views
+
+app_name = "polls"
+urlpatterns = [
+    path("", views.IndexView.as_view(), name="index"),
+    path("<int:pk>/", views.DetailView.as_view(), name="detail"),
+    path("<int:pk>/results/", views.ResultsView.as_view(), name="results"),
+    path("<int:question_id>/vote/", views.vote, name="vote"),
+]
+```
+
+
+
 ## はじめての Django アプリ作成、その 5
+- polls/tests.py
+    - ssertIs(a, b) というメソッドは、「a is b」となるかどうかのテストを実行しており、was_published_recently() の出力が False となっていれば、テストは成功となる
+    ```py
+    import datetime
+
+    from django.test import TestCase
+    from django.utils import timezone
+
+    from .models import Question
+
+
+    class QuestionModelTests(TestCase):
+        def test_was_published_recently_with_future_question(self):
+            """
+            was_published_recently() returns False for questions whose pub_date
+            is in the future.
+            """
+            # 現在日時から３０日後の日時を取得
+            time = timezone.now() + datetime.timedelta(days=30)
+
+            # 上記の日時を使ってQuestionインスタンスを作成
+            future_question = Question(pub_date=time)
+
+            # 上記のQuestionインスタンスをつかってwas_published_recently()を呼び出し真偽値を確認
+            self.assertIs(future_question.was_published_recently(), False)
+
+            # modelsのwas_published_recentlyに定義した通り、pub_dateが1日前から現在日時までの間であればtrueが返される
+
+            # そのwas_published_recentlyの返り血がFalseなら上記テスト自体はTrueとはんていする仕様
+    ```
+
+
+
+
 ## はじめての Django アプリ作成、その 6
+- templatesと同じようにpollsディレクトリはいかにstaticディレクトリを作る。
+- そこへstyle.cssも作成
+    - polls.static/polls/style.css
+- style.cssに以下を記載
+```css
+li a {
+    color: green;
+}
+```
+
+- style.cssをhtmlで読み込む
+```html
+{% load static %}
+
+<link rel="stylesheet" href="{% static 'polls/style.css' %}">
+```
+- cssが適用される
+
+-  polls/static/polls/ ディレクトリの中に images サブディレクトリを 作ります。
+```css
+body {
+    background: white url("images/background.png") no-repeat;
+}
+ ```
+
+- polls/static/polls/ ディレクトリの中に images サブディレクトリを作成
+polls/static/polls/images/background.png となるようにする。
+polls/static/polls/style.cssに以下の内容を追記
+
+```css
+body {
+    background: white url("images/background.png") no-repeat;
+}
+```
+
+ー http://localhost:8000/polls/ をリロードすると、読み込んだ背景画像がスクリーンの左上部に確認できる
 ## はじめての Django アプリ作成、その 7
 ## はじめてのDjangoアプリ作成、その8
 ## 高度なチュートリアル: 再利用可能アプリの書き方
