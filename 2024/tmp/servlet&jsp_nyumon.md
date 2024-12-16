@@ -51,7 +51,8 @@
       ```
       - http://localhost:8080/example3/UranaiServletにアクセスして画面が表示された！
       - (http://<サーバ名>/<アプリケーション名>/<クラス名>)
-
+      - サーブレットクラス作成後にサーバが起動できなくなる不具合が起こった
+          - [こちら](https://sukkiri.jp/books/sukkiri_servlet4/sukkiri_servlet4_appendix/%e5%8b%95%e7%9a%84web%e3%83%97%e3%83%ad%e3%82%b8%e3%82%a7%e3%82%af%e3%83%88%e3%81%ae%e4%bd%9c%e6%88%90.html)に記載のWTPプラグインの不具合をeclipse導入時に直しておく必要があったみたい。直すとすんなり行けた
 ## 5章
 - formタグ内にsubmitタイプの要素は最低1つは必要
 - formタグのmethod属性にはGET,POSTどちらか設定できる
