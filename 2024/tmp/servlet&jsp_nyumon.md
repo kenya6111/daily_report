@@ -226,3 +226,17 @@
     
             }
 ```
+
+- 初期表示
+
+![image](https://github.com/user-attachments/assets/3ec903ac-08cf-49e7-ba32-bcc9a7793287)
+
+- 入力しサブミット
+
+![image](https://github.com/user-attachments/assets/5a687e34-602f-4144-a8f2-77bab1fcd0a0)
+
+- サーブレットでhtmlが生成され描画される
+
+![image](https://github.com/user-attachments/assets/bf271847-8bf4-49f0-a99b-eafea2669f9b)
+
+
