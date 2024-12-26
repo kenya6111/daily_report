@@ -281,4 +281,95 @@
 - ユーザ（ブラウザ）毎に割り当てられるセッションスコープとは違ってこれは、アプリ内のすべてのユーザで共有できるスコープ。
 - これはWebアプリケーションが終了するまでの間、利用できる。1つのアプリケーションにつき１つだけ生成される。
 - 子のスコープはサーバの起動や停止、オートリロード、などの際に一回捨てられる。
-- 
+- ログイン
+  - ログイン画面でIDとパスワードを入力　→　今回のソースでは１２３４という固定値の文字列にパスワードが合致すればログイン成功→成功したら
+  ```java
+      // ユーザー情報をセッションスコープに保存
+      HttpSession session = request.getSession();
+      session.setAttribute("loginUser", user);
+  ```
+    →　その後ログイン後に見れる画面はアクセス時にセッションスコープにUserインスタンスがあるかどうかを見てなければログインしてないと判断し、アクセスを拒否する。→トップ画面にリダイレクトする
+  - ログアウトする際は先セッションに入れたものを破棄してログアウト画面に遷移するって感じ
+```java
+    // セッションスコープを破棄
+    HttpSession session = request.getSession();
+    session.invalidate();
+
+    // ログアウト画面にフォワード
+    RequestDispatcher dispatcher = request.getRequestDispatcher("WEB-INF/jsp/logout.jsp");
+    dispatcher.forward(request, response);
+  }    
+```
+
+- 画面入力をしてつぶやきの入力がからの場合に画面にエラーメッセを出す一例
+　- request.setAttribute("errorMsg", "つぶやきが入力されていません");
+   
+```jsp
+  protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+    // リクエストパラメータの取得
+    request.setCharacterEncoding("UTF-8");
+    String text = request.getParameter("text");
+
+    // 入力値チェック
+    if (text != null && text.length() != 0) {
+      // アプリケーションスコープに保存されたつぶやきリストを取得
+      ServletContext application = this.getServletContext();
+      @SuppressWarnings("unchecked")
+	List<Mutter> mutterList = (List<Mutter>) application.getAttribute("mutterList");
+
+      // セッションスコープに保存されたユーザー情報を取得
+      HttpSession session = request.getSession();
+      User loginUser = (User) session.getAttribute("loginUser");
+
+      // つぶやきをつぶやきリストに追加
+      Mutter mutter = new Mutter(loginUser.getName(), text);
+      PostMutterLogic postMutterLogic = new PostMutterLogic();
+      postMutterLogic.execute(mutter, mutterList);
+
+      // アプリケーションスコープにつぶやきリストを保存
+      application.setAttribute("mutterList", mutterList);
+    } else {
+      //エラーメッセージをリクエストスコープに保存
+      request.setAttribute("errorMsg", "つぶやきが入力されていません");
+    }
+
+```
+- JSPファイルの頭で<%%>でセッションからさっき保存したエラーメッセを取り出して画面に出す
+```jsp
+<%@ page language="java" contentType="text/html; charset=UTF-8" 
+    pageEncoding="UTF-8" %>
+<%@ page import="model.User,model.Mutter,java.util.List" %>
+<%
+// セッションスコープに保存されたユーザー情報を取得
+User loginUser = (User) session.getAttribute("loginUser");
+// アプリケーションスコープに保存されたつぶやきリストを取得
+List<Mutter> mutterList = (List<Mutter>) application.getAttribute("mutterList");
+// リクエストスコープに保存されたエラーメッセージを取得
+String errorMsg = (String) request.getAttribute("errorMsg");
+%>
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>どこつぶ</title>
+</head>
+<body>
+<h1>どこつぶメイン</h1>
+<p>
+<%= loginUser.getName() %>さん、ログイン中
+<a href="Logout">ログアウト</a>
+</p>
+<p><a href="Main">更新</a></p>
+<form action="Main" method="post">
+<input type="text" name="text">
+<input type="submit" value="つぶやく">
+</form>
+<% if(errorMsg != null){ %>
+<p><%= errorMsg %></p>
+<% } %>
+<% for(Mutter mutter : mutterList){%>
+  <p><%=mutter.getUserName()%>：<%=mutter.getText()%></p>
+<% } %>
+</body>
+</html>
+```
