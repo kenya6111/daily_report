@@ -254,3 +254,196 @@ h1{
 ```
 
 （32分消化 2025/1/4時点）
+
+- v-から始まる特別な属性
+    - vue-jsはテンプレート構文として特別な属性を用意している。そういうのをディレクティブといって、必ず「v-」から始まる
+    - vueは「v-」から始まる属性をいろいろ用意している
+        - 以下の例ではv-textの書き方と{{ count}}の書き方は同じ結果になる
+    ```vue
+    <script setup>
+    import {ref} from 'vue'
+    let count =ref(10)
+        function increment(){
+        count.value +=10
+    }
+    </script>
+    <template>
+        <h1>{{ count }}</h1>
+        <h1 v-text="count"></h1>
+        <button @click="increment">increment</button>
+    </template>
+    <style>
+        h1{
+            color:red;
+        }
+    </style>
+
+    ```
+
+    - v-html
+        - v-htmlに渡されたrefオブジェクトに格納された文字列（htmlの記述）をhtmlと認識し画面に表示してくれる
+        - 以下の例では{{ message}}の方はそのまま「<h1>message</h1>」と出力され、
+        - v-htmlの方はhtmlとして画面異表示される。
+        ```vue
+        <script setup>
+            import {ref} from 'vue'
+            let message =ref("<h1>message</h1>")
+        </script>
+        <template>
+            <h1>{{ message }}</h1>
+            <h1 v-html="message"></h1>
+        </template>
+        <style>
+            h1{
+                color:red;
+            }
+        </style>
+        ```
+        - ただ、v-htmlに適用する値は信頼できるもの（すなわちユーザの入力したものを入れてはいけない）のみ適用という風雨にしないといけない
+        - 出ないとクロスサイトスクリプティングになってしまう。
+    - v-bind
+        - 普通のタグ内のTextContentにjsscriptタグ内の変数を表示させるときは二重波括弧「{{}}」でいいが属性値に表示させるときは「v-bind」を使う
+        - 逆にv-bind使わず属性名＝”{{ ref変数 }}”ってのは機能しない
+        - 省略した書き方で「v-bind」を省いて「:」だけ残した書き方もでき、esLintではこちらが推奨される
+        - v-bindを複数の属性に一気に適用させるにはv-bind="{id:vueID, href:vueURL}"のように書く
+        ```vue
+        <script setup>
+            import {ref} from 'vue'
+            const vueURL =ref("https://vuejs.org")
+            const vueID =ref("vueLink")
+        </script>
+        <template>
+            <button v-on:click="">button</button>
+        </template>
+        <style>
+            h1{
+                color:red;
+            }</style>
+        ```
+    - v-on(何かが起きた時に何かをしたい)
+        - v-on:click="式"でクリック時に挙動を設定できる。
+        - 省略記法として「v-on:」を「@」に置き換えられる
+        ```vue
+        <script setup>
+            import {ref} from 'vue'
+            let count=ref(10)
+            function countUp(){
+            count.value+=10
+            }
+        </script>
+        <template>
+        <h1>{{ count }}</h1>
+        <button v-on:click="count+=100">increment</button>
+        <button @click="count+=100">increment</button>
+        <button @click="countUp">increment</button>
+        </template>
+        <style>
+        h1{
+        color:red;
+        }</style>
+        ```
+        - @click(v-on:click)の部分をイベント、="count+=10"(="countUp")の部分をハンドラという
+        - count++のように直接処理を書くパターンをインラインハンドラ、関数を書くぱたーんをメソッドハンドラという
+    - イベントオブジェクトの取得
+        - クリックイベントのようなブラウザが発生させているイベントは「イベント」が発生した時に同時に「イベントオブジェクト」というそのイベントの情報を持ったオブジェクトを生成している。vuejsはそれを取得できる。
+        - v-onで呼び出した関数の引数には仮引数にeventが書かれなくともeventを呼び出せる。
+        - tempalteでは$eventで絵べんTのオブジェクトを取得できている
+        ```vue
+        <script setup>
+            import {ref} from 'vue'
+            let count=ref(10)
+            function countUp(){
+                count.value+=10
+                console.log(event)
+                console.log(event.clientX)
+                console.log(event.clientY)
+            }
+        </script>
+        <template>
+            <h1>{{ count }}</h1>
+            <button v-on:click="count+=100">increment</button>
+            <button @click="count = $event.clientX">increment</button>
+            <button @click="count+=100">increment</button>
+            <button @click="countUp">increment</button>
+        </template>
+        <style>
+            h1{
+            color:red;
+            }
+        </style>
+        ```
+        - 引数を和すには以下の通り
+        ```vue
+        <script setup>
+            import {ref} from 'vue'
+            let count=ref(10)
+            function countUp(num){
+            count.value+=num
+            }
+        </script>
+        <template>
+        <h1>{{ count }}</h1>
+        <button @click="countUp(5000)">increment</button>
+
+        </template>
+        <style>
+        h1{
+        color:red;
+        }</style>
+
+        ```
+    - stop prevent
+        - preventDefaultはデフォルトの挙動を防ぐ
+        - 以下だと、aタグにpreventDefaultしているので、aタグを押下しても画面遷移しない。
+        ```vue
+        <script setup>
+            import {ref} from 'vue'
+        </script>
+        <template>
+        <h1>{{ count }}</h1>
+        <a href="https://vuejs.org" @click="$event.preventDefault()">increment</a>
+        <button >increment</button>
+        </template>
+        <style>
+        h1{
+            color:red;
+        }
+        </style>
+        ```
+
+        - 以下の例ではstopPropagationをしている
+        - vueでは@clickのついた以下のbuttonタグを押したら、親要素のdivの@clickも呼ばれる仕様になっている
+        - Propagation=「伝播」であり、button押した時に親要素の@clickも呼ばれるような電波を止める働きがある。
+        ```vue
+        <script setup>
+            import {ref} from 'vue'
+            function testbutton(){
+            console.log("testbutton")
+            }
+            function testdiv(){
+            console.log("testdiv")
+            }
+        </script>
+        <template>
+        <h1>{{ count }}</h1>
+        <a href="https://vuejs.org" @click="$event.preventDefault()">increment</a>
+        <div @click="testdiv">
+            <button @click="testbutton">increment</button>
+            <button >increment</button>
+            <button @click="$event.stopPropagation()">increment</button>
+        </div>
+        </template>
+        <style>
+        h1{
+            color:red;
+        }
+        </style>
+
+        ```
+
+        - 両者とも省略して以下のようにかける
+        ```vue
+        <a href="https://vuejs.org" @click.prevent="">increment</a>
+        <button @click.stop="">increment</button>
+        ```
+（30分消化 2025/1/6時点）
