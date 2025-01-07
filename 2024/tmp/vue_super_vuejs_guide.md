@@ -447,3 +447,90 @@ h1{
         <button @click.stop="">increment</button>
         ```
 （30分消化 2025/1/6時点）
+- イベント修飾子と似たものとしてキー修飾子がある
+    - これはキーボード系のイベントで使える
+    - @keyupでキーが上がった時、@keydownでキーが押された時に設定した式が発動する。
+    ```vue
+    <script setup>
+    import {ref} from 'vue'
+    const count = ref(0)
+    </script>
+    <template>
+    <h1>{{ count }}</h1>
+        <input type="text" @keydown="count++" @keyup="count++">
+    </template>
+    <style>
+    </style>
+    ```
+    - 特定のキーに対しての時(以下の場合はスペースをダウンした時)
+    ```vue
+    <script setup>
+    import {ref} from 'vue'
+    const count = ref(0)
+    </script>
+    <template>
+    <h1>{{ count }}</h1>
+    <input type="text" @keydown.space="count++">
+    </template>
+    <style>
+    </style>
+    ```
+- ディレクティブの構造
+    - 「v-on:click.prevent="changeData"」
+    - 「v-on」が名前。「click」が引数。「prevent」が修飾子。「changeData」が値。
+- 角かっこ([])を使ってディレクティブの引数にscriptのデータを指定する方法
+    - @の後ろに[変数名]で指定する V
+    ```vue
+    <script setup>
+    import {ref} from 'vue'
+    const count = ref(0)
+    const eventName = 'keyup'
+    </script>
+    <template>
+    <h1>{{ count }}</h1>
+    <input type="text" @[eventName].space.delete="count++" >
+    </template>
+    <style>
+    </style>
+    ```
+- v-modelを使用してInputに入力した値をscriptでの変数と同期させる
+```vue
+<script setup>
+    import {ref} from 'vue'
+    const userInput=ref('')
+</script>
+<template>
+  <input v-model="userInput" type="text" >
+  <h1>{{ userInput }}</h1>
+</template>
+<style>
+</style>
+
+```
+- 式もreactiveに扱いたいときはcomputed()を使う。
+    - 以下の例ではinputに4以上入れれば{{ evaluation}}の表示がBadからGoodに切り替わる。
+    - computedは.valueにアクセスするたびにcomputedが実行される
+    - あとcomputed内のrefオブジェクトが1つでも変更されればcomputedが評価して最新の値を算出してくれる優れもの。ようは値を監視してくれる
+```vue
+<script setup>
+    import { ref,computed } from 'vue'
+    const score =ref(0)
+    const evaluation = computed(()=>{
+      return score.value > 3 ? 'Good' : 'Bad'
+    })
+    console.log(evaluation.value)
+</script>
+<template>
+  <h1>{{ evaluation }}</h1>
+  <input v-model="score" type="text" >
+  <h1>{{  score }}</h1>
+</template>
+<style>
+</style>
+```
+    - computedでは、要は値を監視して、変更あれば実行して最新お値を評価して出すって役割なので、computedで算出した値を変更はしてはいけないってか普通しない。読み取り専用って感じ。またcomputed関数内で外部の変数を変更するお湯なことはしない。あくまで最新の値を見て評価するだけ
+    - computedはcomputed関数内のreactiveなデータを監視して変更されればcomputedを実行するという仕組みだが、その変更を監視する仕組みをリアクティブエフェクトという。
+    - このリアクティブエフェクトはcomputed以外でも使われており、それは「watcher」とテンプレートで使われている
+    - テンプレートでのreactiveeffectは、変更を検知したら再レンダリングする。
+    - computedの結果であるevaluationがtemplate内で使われていない場合、毎回最新の値で評価しても無駄なので、（表示しなくて誰もミない）computedは時効されなくなる
+（35分消化 2025/1/7時点）
