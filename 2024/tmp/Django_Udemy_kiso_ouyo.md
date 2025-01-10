@@ -300,7 +300,7 @@ python manage.py migrate アプリケーション名 zero
     ```
     obj ,create = Person.objects.get_or_create(first_name='Jiro', last_name='Satos')
     ```
-- SELECT` `     
+- SELECT
 ```py
 persons = Person.objects.all()
 print(persons)
@@ -312,3 +312,73 @@ print(person.first_name)
 # エラーにならない。複数取得可能
 p = Person.objects.filter(first_name='taro').all()
 ```
+
+- UPDATE
+
+```py
+# modelインスタンスのsaveメソッドによる更新
+person = Person.objects.get(first_name='taro')
+person.first_name='jiro'
+person.save()# 更新
+
+# updateメソッドメソッドを使用して更新(一度に更新する)
+Event.objects.filter(id=4).update(event_date=event_date)# id=4のレコードに対して更新
+```
+
+- DELETE
+
+```py
+# filterでデータを絞り込んでdeleteメソッドを実行
+Person.objects.filter(name='taro').delete()#nameがtaroのものを削除
+
+# allで、全権取得してdeleteメソッドを実行し、レコードをレコードを削除
+Perosn.objects.all().delete()#Personクラス内のデータを全て削除
+```
+
+- Modelでの他テーブルとの紐付け（外部キー）１
+    - models.forginKey()のon_deleteオプションの値一覧
+        - models.CASCADE(紐付けもとのレコード消えると、紐付け先のレコードも消える)
+            - manufacturテーブル（トヨタ、日産、etc）、carテーブル（manufacturに紐づく車のテーブル）があるとすれば、
+            ```py
+            class Car(models.Model):
+                manufactur = models.FreignKey(
+                    'Manufacture'
+                    on_delete = models.CASCADE
+                )
+            ```
+            のようにクリエートした場合は、manufacturのid=1のレコード（トヨタ）が消えると、carモデルのプリウスとかのトヨタに紐づくレコードが消える
+
+        - models.PROTECT(紐付け元のレコード削除時にProtectedErrorを出して削除で着ないようにする。なので紐付け先（carモデルの方）を全て削除すれば大元のレコードも削除できるよってやつ)
+
+        ```py
+        class Student(models.Model):
+            name=models.CharField(max_length=28)
+            age = models.IntegerField()
+            major = models.CharField(max_length=20)
+            school = models.ForeignKey(
+                'Schools',
+                on_delete=models.CASCADE
+            )
+
+            class Meta:
+                db_table='students'
+
+            def ___str__(self):
+                return f'{self.pk}, {self.name}, {self.age}'
+
+        class Schools(models.Model):
+            name=models.CharField(max_length=20)
+            prefecture=models.ForeignKey(
+                'Prefecture',
+                on_delete=models.CASCADE
+            )
+
+            class Meta:
+                db_table='schools'
+
+        class Prefecture(models.Model):
+            name=models.CharField(max_length=20)
+
+            class Meta:
+                db_table='prefectures'
+        ```
