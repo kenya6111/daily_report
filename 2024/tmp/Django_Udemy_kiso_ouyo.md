@@ -348,8 +348,6 @@ Perosn.objects.all().delete()#Personクラス内のデータを全て削除
             ```
             のようにクリエートした場合は、manufacturのid=1のレコード（トヨタ）が消えると、carモデルのプリウスとかのトヨタに紐づくレコードが消える
 
-        - models.PROTECT(紐付け元のレコード削除時にProtectedErrorを出して削除で着ないようにする。なので紐付け先（carモデルの方）を全て削除すれば大元のレコードも削除できるよってやつ)
-
         ```py
         class Student(models.Model):
             name=models.CharField(max_length=28)
@@ -382,3 +380,155 @@ Perosn.objects.all().delete()#Personクラス内のデータを全て削除
             class Meta:
                 db_table='prefectures'
         ```
+        - migrateを戻すときのやり方
+            - python3 manage.py showmigrations でマイグレートバージョン表示
+            - python3 manage.py migrate (↑で出たバージョンのいずれかを入力)
+            - マイグレート完了
+
+        - models.PROTECT
+            - (紐付け元のレコード削除時にProtectedErrorを出して削除で着ないようにする。なので紐付け先（carモデルの方）を全て削除すれば大元のレコードも削除できるよってやつ)
+            - django.db.models.deletion.ProtectedErrorってエラーが出る。紐づいているレコード（carモデルの方）がある限り、大元のレコードは消せないってこと。
+            - 以下のようにmodels.PROTECTの場合、紐づく大元のSchoolのレコードが消されようとするとエラーを吐いて削除されないようにしてくれる。
+            ```py
+            class Student(models.Model):
+                name=models.CharField(max_length=28)
+                age = models.IntegerField()
+                major = models.CharField(max_length=20)
+                school = models.ForeignKey(
+                    'Schools',
+                    on_delete=models.PROTECT
+                )
+
+                class Meta:
+                    db_table='students'
+
+                def ___str__(self):
+                    return f'{self.pk}, {self.name}, {self.age}'
+            ```
+        - models.SET_NULL
+            - 大元のレコードが消されると、紐づいているレコードの外部キーにはNULLが入るようにする。
+        
+        - models.RESTRICT
+            - 紐付け先が削除されようとすると防ぐ、
+            - ただし、紐付け元（Student）のレコードのカラムで、別の外部キーで他テーブル（例えばPrefectureなど）と紐づいていて、models.CASCADEで紐づいていたら、Prefectureのレコードが消された時は、それに紐づくStudentのレコードはCAscadeで紐づいているので消されるという仕組みになっている
+            - つまり上の例でStudentテーブルからSchoolテーブルに対してRESTRICTEDで外部キーを設定していたが、それをPROTECTEDにすると、CASCADEで紐付けていたPrefectureのレコードを消そうとすると、PROTECTEDErrorで消されない、
+            - RestrictedErrorを出す
+
+- models.OneToOneFieldで1対1で紐付ける
+    - 外部キーの方に、外部キーと合わせて主キーも持たせることで、１対１の紐付けになる
+- 多対多はManyToManyFieldで紐づける
+    - BookとAuthorのテーブルがあったとする。1つの著者に対して多の本が描かれます、逆に1つの本に対して共著で複数の著者がいます。こういった場合は多対多のリレーションになる。その際にManyToManyFieldが必須。この際に２テーブル間につなぎのテーブルが1つできる（AuthorsBook）。←AuthorsBookテーブル自体のプライマリーキーカラムと、AuthorとBookのテーブルの外部キーの３カラムを持つ。
+
+- related_name
+    - 多対多の場合もそうだし、1対多の場合でもそうだが、modesl.ForeginKeyやmodels.OneToOneFieldでも、models.ManyToManyFieldでもそうだけど、それらのオプションとしてrelated_nameを設定できる
+    - これを設定すると、以下のように紐づいたレコードを取得できる。
+    ![alt text](<www.udemy.com_course_python-django-web_learn_lecture_23108730 (1).png>)
+
+    - 外部キーの方にrelated_nameを設定して、紐付けもとから逆引きする際にrelated_nameを使って外部の紐づいているレコードを取得する。
+
+- レコードを１件だけ取得
+    - Model.objects.first()
+
+- 要素数を制限する
+    - Model.objects.all()[:5]
+
+![alt text](www.udemy.com_course_python-django-web_learn_lecture_23176416.png)
+
+![alt text](<www.udemy.com_course_python-django-web_learn_lecture_23176416 (1).png>)
+
+![alt text](<www.udemy.com_course_python-django-web_learn_lecture_23176416 (1)-1.png>)
+
+![alt text](www.udemy.com_course_python-django-web_learn_lecture_23231338.png)
+
+![alt text](www.udemy.com_course_python-django-web_learn_lecture_23244758.png)
+
+- QuerySetとManagerについて
+![alt text](www.udemy.com_course_python-django-web_learn_lecture_46162155.png)
+    - Modelはマネージャーというものを持っていて、いつも書いているobjectsがManager.
+    - そのマネージャーがクエリセットをを作成し、データが必要になったらSQLを発行する。
+    上記画像の左上の３処理も、クエリセットを作っているだけでDBにはアクセスしていない、データはとってきてない
+    - このようにすることで複数のクエリセットを重ねて処理を分割できる。
+        - この条件のときはfilterで〜とか、この条件じゃないないならgte使って〜とかできる
+    - で、DBにアクセスするタイミングはループ処理とかループ処理とかリストに変換とか、getの処理とか（getはSQLの発行までせっとなので。）
+![alt text](www.udemy.com_course_python-django-web_learn_lecture_46162155-1.png)
+    - Managerでは狗w理想さを分離することで異論んな複雑な処理をmanagerの中で定義するためのもの。
+    - Managerでせっていしたクエリ操作の塊を、User.objects.(managerで設定したメソッド名)で呼び出して使うことができる
+
+
+## 8章
+- フォームとは
+    - データの入力をサーバに送信して、データが正しいかチェックして処理を行う機能
+    ![alt text](www.udemy.com_course_python-django-web_learn_lecture_23421454.png)
+
+    ![alt text](<www.udemy.com_course_python-django-web_learn_lecture_23421454 (1).png>)
+
+    - form.is_valid()を使ってform内の値が正しいかチェックしてくれる
+
+    - forms.pyにフォームクラスを作る
+    ```py
+    # forms.py
+    from django import forms
+
+    class UserInfo(forms.Form):
+        name = forms.CharField()
+        age = forms.IntegerField()
+        mail = forms.EmailField()
+    ```
+
+    - view.pyでフォームを読み込んでコンテキストで使う
+    ```py
+    from django.shortcuts import render
+    from . import forms
+    # Create your views here.
+
+    def index(request):
+        return render(request, 'formapp/index.html')
+
+    def form_page(request):
+        form = forms.UserInfo()
+        print("form: ", form)
+        return render(request,'formapp/form_page.html',
+                    context={
+                        'form': form
+                    }
+                )
+    ```
+
+![alt text](www.udemy.com_course_python-django-web_learn_lecture_23422694.png)
+
+- フォームの仕組み。レンダリングの流れ
+    - Fieldは上記でも記述したフォームの各入力欄のこと。フィールドではバリデーション処理を行う。
+    - そんで各フィールドにはウィジェット(Widget)という要素がある
+        - widgetはフィールドのhtmｌ表現を定義するクラスでレンダリングに使用する。
+        - 各フィールドは1つウィジェットを持つ
+        - レンダリングの際はフォームのrenderメソッドが呼ばれ、その中で、各widgetが持っているが持っているrenderが実行されていき実行されていき、レンダリングされる
+        ![alt text](<www.udemy.com_course_python-django-web_learn_lecture_23422694 (1).png>)
+        
+        - ⇩フォームの実装例
+        ```py
+        from django import forms
+        from datetime import date
+        class UserInfo(forms.Form):
+            name = forms.CharField(label="名前", min_length=5, max_length=10, required=False)
+            age = forms.IntegerField(label="年齢")
+            mail = forms.EmailField(label="メールアドレス",
+                widget=forms.TextInput(attrs={'abc':'ABC', 'placeholder':'sample@gmail.com'})
+                                    )
+            verify_mail = forms.EmailField(label="メールアドレス際入力")
+            is_married = forms.BooleanField(initial=True)
+            birthday = forms.DateField(initial=date(1990,1,1))
+            salary = forms.DecimalField()
+            job = forms.ChoiceField(choices=(
+                (1,'正社員'),
+                (2,'自営業'),
+                (3,'学生'),
+                (4,'無職')), widget=forms.RadioSelect)
+            hobby = forms.MultipleChoiceField(choices=(
+                (1,'スポーツ'),
+                (2,'読書'),
+                (3,'映画鑑賞'),
+                (4,'その他')), widget=forms.CheckboxSelectMultiple)
+            homepage=forms.URLField()
+            memo = forms.CharField(widget=forms.Textarea)
+        ```
+        - attrsは、forms.CharField()の内で既存の属性を設定できるが、、その既存のものではなくとも、自由に属性を設定できる。上記のmail部分を見るとattrsがあり、そこにタグの属性を自由に設定できる
