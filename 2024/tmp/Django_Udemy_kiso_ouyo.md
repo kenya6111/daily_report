@@ -532,3 +532,6 @@ Perosn.objects.all().delete()#Personクラス内のデータを全て削除
             memo = forms.CharField(widget=forms.Textarea)
         ```
         - attrsは、forms.CharField()の内で既存の属性を設定できるが、、その既存のものではなくとも、自由に属性を設定できる。上記のmail部分を見るとattrsがあり、そこにタグの属性を自由に設定できる
+
+        ![alt text](www.udemy.com_course_python-django-web_learn_lecture_23427044.png)
+        
