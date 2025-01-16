@@ -534,3 +534,145 @@ h1{
     - テンプレートでのreactiveeffectは、変更を検知したら再レンダリングする。
     - computedの結果であるevaluationがtemplate内で使われていない場合、毎回最新の値で評価しても無駄なので、（表示しなくて誰もミない）computedは時効されなくなる
 （35分消化 2025/1/7時点）
+
+
+
+
+## 19章 (はじめに Vue2)
+- vueの特徴
+    - 簡単、柔軟、高性能
+    - jsfiddle
+        - html css jsをすぐ試して遊べるやつ
+    - 
+    ```html
+    <script src="https://cdn.jsdelivr.net/npm/vue@2.7.11/dist/vue.js"></script>
+
+    <div id="app">
+    <p>
+    hello world
+    </p>
+    </div>
+    ```
+    ```js
+    new Vue({
+	    el: '#app'
+    })
+    ```
+- 上記のソースの解説
+    - htmlでVueのCDNを読み込んで、
+    - jsでnew Vue()でVueを使いますって宣言しました、
+    - new Vue()でVueインスタンスを宣言
+    - その中のel: '#app'で、htmlのidがappに対してvueインスタンスを使いますよって宣言している
+    - elは要素という意味
+    ```html
+    <script src="https://cdn.jsdelivr.net/npm/vue@2.7.11/dist/vue.js"></script>
+    <div id="app">
+    <p>
+    {{message}}
+    </p>
+
+    </div>
+    ```
+
+    ```js
+    new Vue({
+	el: '#app',
+    data: {
+        message:'hello world vue'
+    }
+    })
+    ```
+- 上記ソースの解説
+    - Vueインスタンスではデータを持つことができ、dataというプロパティを持てる
+    - このデータ内に定義したものをhtmlで{{ }}で表示できる
+
+
+    ```html
+    <script src="https://cdn.jsdelivr.net/npm/vue@2.7.11/dist/vue.js"></script>
+
+    <div id="app">
+    <p>
+    {{message}}
+    </p>
+    <button v-on:click="reverseMessage">メッセージ反転
+    </button>
+
+    </div>
+    ```
+    ```js
+    new Vue({
+	el: '#app',
+    data: {
+        message:'hello world vue'
+    },
+    methods:{
+        reverseMessage: function(){
+            this.message = this.message.split('').reverse().join('')
+            }
+    }
+    })
+    ```
+    - v-on
+        - vueが用意している特別の属性
+        - v-on:clickとすることで、クリック時に上記ソースでいうreverseMessageが呼ばれる。
+    - VUeインスタンスは加えてmethodsという領域も持つことができ、いろんな処理を定義できる。
+        - methodsはいろんな関数が並べられている場所。
+    - methods内の関数内でthis.messageとす流書き方で、Vueインスタンス内のmessageプロパティにアクセスしますという意味になる
+
+# 20章（これがVuejsの基礎、テンプレート構文だ！ Vue2）
+- そもそもテンプレートとは何か
+    - さっきのソースでいう、以下の部分
+    - これはあくまでもhtmlではなく「テンプレート」を書いている
+    - vueがこのテンプレートを読んで見て、最終的にhtmlとして出してくれる。
+    - なので私たちはhtmlを書いているのではない。
+    ```html
+        <div id="app">
+                <p>{{ message }}</p>
+            <button v-on:click="reverseMessage">メッセエージ反転</button>
+        </div>
+    ```
+
+- new Vue()はvueの心臓のような部分
+- テンプレートでかく二重中括弧の中身はVueインスタンス内のdataプロパティ内で持つ値である
+    - data.messageと書きたくなるが、Vueではテンプレートで直接data内のプロパティをかける
+    - {{}} ないは式を書くことができる、jsのね。（でもあくまで単一の式だけ書ける）
+    - methods内の関数も{{}}内で呼ぶことができる
+    ```html
+    <!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <script src="https://cdn.jsdelivr.net/npm/vue@2.7.16/dist/vue.js"></script>
+    <div id="app">
+        <p>{{ message }}</p>
+        <p>{{ number + 3 }}</p>
+        <p>{{ ok? 'YES': 'NO'}}</p>
+        <p>{{ sayHi()}}</p>
+        <button v-on:click="reverseMessage">メッセエージ反転</button>
+        </div>
+        <script>
+            new Vue({
+                el:'#app',
+                data: {
+                    message: 'helloworld',
+                    number:3,
+                    ok:true
+                },
+                methods: {
+                    reverseMessage: function(){
+                        this.message = this.message.split('').reverse().join("")
+                    },
+                    sayHi: function(){
+                        return 'Hi'
+                    }
+                }
+            })
+
+        </script>
+    </body>
+    </html>
+    ```
