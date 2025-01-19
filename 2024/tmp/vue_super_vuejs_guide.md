@@ -852,3 +852,232 @@ h1{
     </body>
     </html>
     ```
+
+- イベント修飾子
+    - stoppropagation
+        - 以下のように「クリックしないでください」のエリアだけイベント起こしたくない時は、spanタグの属性として、stopPropagation()をするメソッドを持たせる
+        - 毎回stoppropagationの関数をmethodsに書くのは冗長すぎるので、vueはmousemove.stopとするだけで同じ動きを実装できる
+    ```html
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Document</title>
+    </head>
+    <body>
+        <script src="https://cdn.jsdelivr.net/npm/vue@2.7.16/dist/vue.js"></script>
+        <div id="app">
+            <p>{{number}}   回クリックされています</p>
+            <p>X:{{x}} Y:{{y}}</p>
+            <button v-on:click="countup(2)">ボタン</button>
+            <p v-on:mousemove="changemouseposition(3,$event)">マウスを乗せてください
+                <!-- <span v-on:mousemove="noEvent">クリックしないでください</span> -->
+                <span v-on:mousemove.stop="">クリックしないでください</span>
+            </p>
+        </div>
+        <script>
+            new Vue({
+                el:'#app',
+                data: {
+                    number:0,
+                    x:0,
+                    y:0,
+                },
+                methods:{
+                    countup: function(times){
+                        this.number+=1*times
+                    },
+                    changemouseposition: function(divideNumber,event){
+                        console.log(event)
+                        this.x=event.clientX/divideNumber
+                        this.y=event.clientY/divideNumber
+                    },
+                    noEvent: function(){
+                        event.stopPropagation()
+                    }
+                }
+            })
+
+        </script>
+    </body>
+    </html>
+    ```
+
+    - preventDefault
+        - デフォルトの動きを止めてくれる
+        - 下記の例ではaタグのクリック時の挙動をpreventで止めている。よってクリックしても飛ばない。
+        - これも同じく専用のmethodsを書くのが冗長すぎるので、v-on:click.preventで同じ機能を実装できる
+        ```html
+        <!DOCTYPE html>
+        <html lang="en">
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>Document</title>
+        </head>
+        <body>
+            <script src="https://cdn.jsdelivr.net/npm/vue@2.7.16/dist/vue.js"></script>
+            <div id="app">
+                <a v-on:click="noEvent" href="https://google.com">Google</a>
+                <a v-on:click.prevent href="https://google.com">Google</a>
+            </div>
+            <script>
+                new Vue({
+                    el:'#app',
+                    data: {
+                    },
+                    methods:{
+                        noEvent: function(){
+                            event.preventDefault()
+                        }
+                    }
+                })
+
+            </script>
+        </body>
+        </html>
+        ```
+
+- キー修飾子
+    - キーボードに対するDOMイベントに対して使える修飾子
+    - keyup→キーを押し離した時
+    - 以下の例では、1つ目のinputタグでは、キーがアップした時にmyAlertが呼ばれる・
+    - 2つ目のinputでは、enterキーのみに対して、キーが上がった時にmyAlertが発火するようになる。
+    ```html
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Document</title>
+    </head>
+    <body>
+        <script src="https://cdn.jsdelivr.net/npm/vue@2.7.16/dist/vue.js"></script>
+        <div id="app">
+            <input type="text" v-on:keyup="myAlert">
+            <input type="text" v-on:keyup.enter="myAlert">
+        </div>
+        <script>
+            new Vue({
+                el:'#app',
+                data: {
+                },
+                methods:{
+                    myAlert: function(){
+                        console.log(111)
+                    }
+                }
+            })
+
+        </script>
+    </body>
+    </html>
+    ```
+
+- v-onディレクティブの引数を[]を使って動的に設定する。
+    - 以下のようにv-on以降のDOMイベントをdataで持っておいて、[]で動的に設定できる。
+    ```html
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Document</title>
+    </head>
+    <body>
+        <script src="https://cdn.jsdelivr.net/npm/vue@2.7.16/dist/vue.js"></script>
+        <div id="app">
+            <p>{{number}}</p>
+            <button v-on:[event]="countUp">カウントアップ</button>
+        </div>
+        <script>
+            new Vue({
+                el:'#app',
+                data: {
+                    number:0,
+                    event: 'click'
+                },
+                methods:{
+                    countUp: function(){
+                        this.number+=1
+                    }
+                }
+            })
+
+        </script>
+    </body>
+    </html>
+    ```
+- v-on の省略記法
+    - v:bindは「:」で省略できたが、v-onは@で省略できる
+    - これはどちらかの記法に統一した方が綺麗になる
+    ```html
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Document</title>
+    </head>
+    <body>
+        <script src="https://cdn.jsdelivr.net/npm/vue@2.7.16/dist/vue.js"></script>
+        <div id="app">
+            <p>{{number}}</p>
+            <button @click="countUp">カウントアップ</button>
+            <button @[event]="countUp">カウントアップ</button>
+        </div>
+        <script>
+            new Vue({
+                el:'#app',
+                data: {
+                    number:0,
+                    event: 'click'
+                },
+                methods:{
+                    countUp: function(){
+                        this.number+=1
+                    }
+                }
+            })
+
+        </script>
+    </body>
+    </html>
+    ```
+- v-model
+    - 双方向データバインディングを作成するために用いる
+    - 今まではVueインスタンスの値を変える → tempalteの値が変わるのバインドはしていたが、逆はなかった
+    - これの両方向のバインドをできるのがv-model
+    - これで、画面の初期値でinput欄に「こんにちは」（VUeインスタンス→temmpalteへのバインディング）が表示され、
+    inputに値を画面から入れると、その下の{{messagen}}の表示が変わる。
+    ```html
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Document</title>
+    </head>
+    <body>
+        <script src="https://cdn.jsdelivr.net/npm/vue@2.7.16/dist/vue.js"></script>
+        <div id="app">
+            <input type="text" v-model="message">
+            <p>{{message}}</p>
+        </div>
+        <script>
+            new Vue({
+                el:'#app',
+                data: {
+                    message:"こんにちは",
+                },
+                methods:{
+                }
+            })
+
+        </script>
+    </body>
+    </html>
+    ```
+- computedプロパティー(算出プロパティ)
+    - 動的なプロパティを用いるときに使うもの
