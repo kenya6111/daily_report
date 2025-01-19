@@ -637,6 +637,8 @@ h1{
     - data.messageと書きたくなるが、Vueではテンプレートで直接data内のプロパティをかける
     - {{}} ないは式を書くことができる、jsのね。（でもあくまで単一の式だけ書ける）
     - methods内の関数も{{}}内で呼ぶことができる
+    - Vueインスタンス内でVueインスタンス内のプロパティを呼ぶときはthisを使う。
+    
     ```html
     <!DOCTYPE html>
 <html lang="en">
@@ -652,6 +654,8 @@ h1{
         <p>{{ number + 3 }}</p>
         <p>{{ ok? 'YES': 'NO'}}</p>
         <p>{{ sayHi()}}</p>
+        <p>{{ sayHi2()}}</p>
+        p
         <button v-on:click="reverseMessage">メッセエージ反転</button>
         </div>
         <script>
@@ -668,6 +672,178 @@ h1{
                     },
                     sayHi: function(){
                         return 'Hi'
+                    },
+                    sayHi2: function(){
+                        return this.message;
+                    }
+                }
+            })
+
+        </script>
+    </body>
+    </html>
+    ```
+- ディレクティブについて
+    - Vue.jsにおける特別な属性のこと。
+    - vuejs専用のディレクティブ（属性）は先頭に「v-」がついている
+    - 以下のソースではv-textを使っている。v-text="message"と{{ messsage }}は同じ意味
+    - 以下のソースではv-bindも使っている.htmlの属性をVueインスタンスのプロパティによって束縛する役割があります。
+    - v-bindはコロン『:』に置き換えることができます。（省略記法）
+    - dataプロパティのmyNameの値を「太郎」にすると、テキストボックスの中身(= value)は「太郎」になりますが、
+    テキストボックスの中身(= value)を「太郎」にしても、dataプロパティのmyNameの値は「太郎」になりません。
+    v-bind：Vueインスタンス内のデータ → html属性の単方向のみ
+    ```html
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Document</title>
+    </head>
+    <body>
+        <script src="https://cdn.jsdelivr.net/npm/vue@2.7.16/dist/vue.js"></script>
+        <div id="app">
+            <p>{{ message }}</p>
+            <p v-text="message"></p>
+            <a v-bind:href="url">google </a>
+            <a :href="url">google </a>
+        </div>
+        <script>
+            new Vue({
+                el:'#app',
+                data: {
+                    message: 'helloworld',
+                    url: 'https://google.com',
+                },
+                methods: {
+                }
+            })
+
+        </script>
+    </body>
+    </html>
+    ```
+    - 「v-once」→一回だけ描画する
+
+    - v-bind={}とすることで、バインドするものをまとめてかける。
+    - :[変数]とするとこで、属性名も設定できる。
+    - Vueインスタンス側でオブジェクト作ってバインドするやり方もできる。
+    ```html
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Document</title>
+    </head>
+    <body>
+        <script src="https://cdn.jsdelivr.net/npm/vue@2.7.16/dist/vue.js"></script>
+        <div id="app">
+            <a :[attribute]="url"> google </a>
+            <a v-bind="{href:urlTwitter,id:number}">Twitter</a>
+            <a v-bind="twitterObject">Twitter</a>
+        </div>
+        <script>
+            new Vue({
+                el:'#app',
+                data: {
+                    attribute:'href',
+                    url:'https://google.com',
+                    urlTwitter:'https://twitter.com',
+                    number:30,
+                    twitterObject:{
+                        href:'https://twitter.com',
+                        id:30
+                    }
+                }
+            })
+
+        </script>
+    </body>
+    </html>
+    ```
+    - v-on
+        - DOMが提供するイベントが発生したものを検知
+        - v-on:イベント名="式または関数名"とすることで、クリック時に処理が実行される。
+        - 関数名には（）はつけなくてもつけてもどっちでも良い。今回は関数は引数がないのでつけていない。
+        - イベントのリファレンス雨はこちら（https://developer.mozilla.org/ja/docs/Web/Events）
+        - v-on:mousemoveで対象の要素にマウスが載っている時にイベントが発火し続ける
+    ```html
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Document</title>
+    </head>
+    <body>
+        <script src="https://cdn.jsdelivr.net/npm/vue@2.7.16/dist/vue.js"></script>
+        <div id="app">
+            <p>{{number}}   回クリックされています</p>
+            <button v-on:click="number+=1">ボタン</button>
+            <button v-on:click="countup">ボタン</button>
+            <p v-on:mousemove="changemouseposition">マウスを乗せてください</p>
+            <p>X:{{x}} Y:{{y}}</p>
+            <button v-on:click="countup">ボタン</button>
+            
+        </div>
+        <script>
+            new Vue({
+                el:'#app',
+                data: {
+                    number:0
+                },
+                methods:{
+                    countup: function(){
+                        this.number+=1
+                    },
+                    changemouseposition: function(event){
+                        console.log(event)
+                        this.x=event.clientX
+                        this.y=event.clientY
+                    }
+                }
+            })
+
+        </script>
+    </body>
+    </html>
+    ```
+    - イベントオブジェクトとは
+        - そのイベントの情報が入ったオブジェクトのこと。
+        - 上記のようにイベントオブジェクトは関数で自動で受け取れていたが、じゃあeventオブジェクト以外に、自分で引数を渡す設定したときにどんな書き方なんの？って時、以下のように書く。（$event）
+    ```html
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Document</title>
+    </head>
+    <body>
+        <script src="https://cdn.jsdelivr.net/npm/vue@2.7.16/dist/vue.js"></script>
+        <div id="app">
+            <p>{{number}}   回クリックされています</p>
+            <p>X:{{x}} Y:{{y}}</p>
+            <button v-on:click="countup(2)">ボタン</button>
+            <p v-on:mousemove="changemouseposition(3,$event)">マウスを乗せてください</p>
+        </div>
+        <script>
+            new Vue({
+                el:'#app',
+                data: {
+                    number:0,
+                    x:0,
+                    y:0,
+                },
+                methods:{
+                    countup: function(times){
+                        this.number+=1*times
+                    },
+                    changemouseposition: function(divideNumber,event){
+                        console.log(event)
+                        this.x=event.clientX/divideNumber
+                        this.y=event.clientY/divideNumber
                     }
                 }
             })
