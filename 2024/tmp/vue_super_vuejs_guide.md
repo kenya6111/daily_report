@@ -539,6 +539,8 @@ h1{
 
 
 ## 19章 (はじめに Vue2)
+- 1000分=16.8時間
+- 1日30分ずつで33日かかる計算。
 - vueの特徴
     - 簡単、柔軟、高性能
     - jsfiddle
@@ -1081,3 +1083,437 @@ h1{
     ```
 - computedプロパティー(算出プロパティ)
     - 動的なプロパティを用いるときに使うもの
+    - dataは動的なものを表現することはできない。あくまでも初期値を扱うだけ。
+    - computedプロパティは関数を書くがあくまでもプロパティなので、returnで値を返す必要がある。
+    - computedからdataにアクセス時もthisを使う。
+    - 以下lessThanThreeを実装したもの。numberのdataプロパティを見て、動的に表示値を切り替えている。
+    ```html
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Document</title>
+    </head>
+    <body>
+        <script src="https://cdn.jsdelivr.net/npm/vue@2.7.16/dist/vue.js"></script>
+        <div id="app">
+            <button v-on:click="countUp">カウントアップ</button>
+            <p>{{ number }}</p>
+            <p>{{number > 3 ? '3より大きい':'3より小さい'}}</p>
+            <p>{{ lessThanThree }}</p>
+        </div>
+        <script>
+            new Vue({
+                el:'#app',
+                data: {
+                    number:0
+                },
+                methods:{
+                    countUp: function(){
+                        this.number+=1
+                    }
+                },
+                computed:{
+                    lessThanThree: function(){
+                        return this.number > 3 ? '3より上':'3以下'
+                    }
+                }
+            })
+
+        </script>
+    </body>
+    </html>
+    ```
+
+    - 同じような挙動はcomputedを使わなくてもmethodsでも同じことができる。じゃあmethodsとcomputedの違いはなんなのか。
+        - 違いはいつ関数が実行されているか。
+        - methods(lessThanThreeMethod)は以下のようにthis.numberを関数内で見ているが、numberではなくotherNumberをカウントアップしても呼ばれてしまう。
+        - つまりmethodsは画面が再描画される時に毎回呼ばれてしまうものなのだ。
+        - ソースが大規模になるにつれて、ちょっとでも書き換わるとmethodsが全部呼ばれてってのはめちゃくちゃ面倒。問題。毎回毎回大量のメソッドが買い変わってしまう。
+        - それに対処するためにcomputedプロパティ。なので、Vueの開発者は、computedという、その関数内でもつプロパティが書き換わった時のみ実行される仕組みを作った。
+        - なので、numberが変わった場合はcomputedのプロパティ（）
+        ```html
+        <!DOCTYPE html>
+        <html lang="en">
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>Document</title>
+        </head>
+        <body>
+            <script src="https://cdn.jsdelivr.net/npm/vue@2.7.16/dist/vue.js"></script>
+            <div id="app">
+                <button v-on:click="countUp">カウントアップ</button>
+                <button v-on:click="otherNumber +=1 ">別のカウントアップ</button>
+                <p>{{ number }}</p>
+                <p>{{ otherNumber }}</p>
+                <p>{{ lessThanThree }}</p>
+                <p>{{ lessThanThreeMethod() }}</p>
+            </div>
+            <script>
+                new Vue({
+                    el:'#app',
+                    data: {
+                        number:0,
+                        otherNumber:0
+                    },
+                    methods:{
+                        countUp: function(){
+                            this.number+=1
+                        },
+                        lessThanThreeMethod: function(){
+                            console.log("methods!")
+                            return this.number > 3 ? '3より上':'3以下'
+                        }
+                    },
+                    computed:{
+                        lessThanThree: function(){
+                            console.log("computed!")
+                            return this.number > 3 ? '3より上':'3以下'
+                        }
+                    }
+                })
+
+            </script>
+        </body>
+        </html>
+        ```
+
+- ウォッチャ
+    - 特定のデータが変わった時、に何か処理を実行したい
+    - 例えばdatapウロパティ内のある変数が変わった時に処理を実行したいって時にウォッチャを使う。
+    - ウォッチャとcomuptedは何が違うのか。
+        - 基本的にはウォッチャは使用しない。基本的にはcomputedを使用してほしい。
+        - computedでも庇いきれないところがあり、それはcomputedはあくまでもプロパティで、テンプレート内でそのcomputedのメソッドを書かないと、たとえカウントアップしてnumberが変わっても実行されない。
+        - 一方ウォッチャは値が変われば絶対に呼ばれる。
+
+        ```html
+        <!DOCTYPE html>
+        <html lang="en">
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>Document</title>
+        </head>
+        <body>
+            <script src="https://cdn.jsdelivr.net/npm/vue@2.7.16/dist/vue.js"></script>
+            <div id="app">
+                <button v-on:click="countUp">カウントアップ</button>
+                <p>{{ number }}</p>
+                <!-- <p>{{ lessThanThree }}</p> -->ここ記述消したからlessThanThreeは呼ばれない。
+            </div>
+            <script>
+                new Vue({
+                    el:'#app',
+                    data: {
+                        number:0,
+                        otherNumber:0
+                    },
+                    methods:{
+                        countUp: function(){
+                            this.number+=1
+                        },
+                    },
+                    computed:{
+                        lessThanThree: function(){
+                            console.log("computed!")
+                            return this.number > 3 ? '3より上':'3以下'
+                        }
+                    }
+                })
+
+            </script>
+        </body>
+        </html>
+        ```
+        - ウォッチャはよく非同期の処理で使われる。
+        - vueインスタンス内の非同期処理の中ではthisは使わない
+        - 以下の例ではウォッチャを使って3秒後にnumberをゼロに上書きしている。ただ基本的にウォッチャではなく、computedを使うのがベストプラクティス。
+        - computedでやりたいことができないってk時にウォッチャを使う。
+        ```html
+        <!DOCTYPE html>
+        <html lang="en">
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>Document</title>
+        </head>
+        <body>
+            <script src="https://cdn.jsdelivr.net/npm/vue@2.7.16/dist/vue.js"></script>
+            <div id="app">
+                <button v-on:click="countUp">カウントアップ</button>
+                <p>{{ number }}</p>
+                <!-- <p>{{ lessThanThree }}</p> -->
+            </div>
+            <script>
+                new Vue({
+                    el:'#app',
+                    data: {
+                        number:0,
+                        otherNumber:0
+                    },
+                    methods:{
+                        countUp: function(){
+                            this.number+=1
+                        },
+                    },
+                    computed:{
+                        lessThanThree: function(){
+                            console.log("computed!")
+                            return this.number > 3 ? '3より上':'3以下'
+                        }
+                    },
+                    watch:{
+                        number: function(){
+                            console.log(11)
+                            var vm = this;
+                            setTimeout(function(){
+                                vm.number=0
+
+                            },3000)
+                        }
+                    }
+                })
+
+            </script>
+        </body>
+        </html>
+        ```
+- ()ってどこでつけるの？？二重カッコないとか@clickの時とか。
+    - 二重カッコ内では
+        - computedはカッコつけずに
+        - methodsは必ずつける、
+    - v-onとか@clickの時はカッコつけてもつけなくてもどっちでもいい！
+    ```html
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Document</title>
+    </head>
+    <body>
+        <script src="https://cdn.jsdelivr.net/npm/vue@2.7.16/dist/vue.js"></script>
+        <div id="app">
+            <p>{{number}}</p>
+            <button v-on:click="countUp">カウントアップ</button>
+            <button v-on:click="countUp()">カウントアップ</button>
+            <p>{{ doubleCounterComputed }}</p>
+            <p>{{ doubleCOunterMethod() }}</p>
+            <!-- <p>{{ lessThanThree }}</p> -->
+        </div>
+        <script>
+            new Vue({
+                el:'#app',
+                data: {
+                    number:0,
+                    otherNumber:0
+                },
+                methods:{
+                    countUp: function(){
+                        this.number+=1
+                    },
+                    doubleCOunterMethod: function(){
+                        return this.number * 2
+                    }
+                },
+                computed:{
+                    doubleCounterComputed: function(){
+                        return this.number * 2
+                    }
+                }
+            })
+
+        </script>
+    </body>
+    </html>
+    ```
+- クラスの動的制御
+    - 以下のようにバインディングすることでクラスの適用を動的に切り替えることができる。
+    - computed内で判別処理を書いて、テンプレートにはcomputedのプロパティだけ書くと見やすくなる。
+    - class="{red:isActive, 'bg-blue':!isActive}"のようにオブジェクト内のキーがケバブケースの場合はシングルクォーテーションで囲む必要がある。
+    ```html
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Document</title>
+    </head>
+    <body>
+        <script src="https://cdn.jsdelivr.net/npm/vue@2.7.16/dist/vue.js"></script>
+        <div id="app">
+            <h1 :class="{red: isActive, 'bg-blue':!isActive}">hellowolrd</h1>
+            <h1 :class="classObject">hello</h1>
+            <button @click="isActive = ! isActive">切り替え</button>
+        </div>
+        <script>
+            new Vue({
+                el:'#app',
+                data: {
+                    isActive:true
+                },
+                methods:{
+                },
+                computed:{
+                    classObject: function(){
+                        return {
+                            red: this.isActive,
+                            'bg-blue': !this.isActive
+                        }
+                    }
+                }
+            })
+
+        </script>
+        <style>
+            .red{
+                color:red;
+            }
+            .bg-blue{
+                background-color: blue;
+            }
+        </style>
+    </body>
+    </html>
+    ```
+- クラスをバインディングするとき、配列を使う
+    - 
+    ```html
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Document</title>
+    </head>
+    <body>
+        <script src="https://cdn.jsdelivr.net/npm/vue@2.7.16/dist/vue.js"></script>
+        <div id="app">
+            <h1 :class="[color, bg]">hello</h1>
+            <h1 :class="[{red: isActive}, bg]">hello</h1>
+            <button @click="isActive = ! isActive">切り替え</button>
+        </div>
+        <script>
+            new Vue({
+                el:'#app',
+                data: {
+                    isActive:true,
+                    color:'red',
+                    bg:'bg-blue'
+                },
+                methods:{
+                },
+                computed:{
+                    classObject: function(){
+                        return {
+                            red: this.isActive,
+                            'bg-blue': !this.isActive
+                        }
+                    }
+                }
+            })
+
+        </script>
+        <style>
+            .red{
+                color:red;
+            }
+            .bg-blue{
+                background-color: blue;
+            }
+        </style>
+    </body>
+    </html>
+    ```
+- スタイル属性をスタイル属性をオブジェクトを用いて動的にバインディングする。
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <script src="https://cdn.jsdelivr.net/npm/vue@2.7.16/dist/vue.js"></script>
+    <div id="app">
+        <h1 :style="{color:textColor, 'background-color':bgColor}">hello</h1>
+    </div>
+    <script>
+        new Vue({
+            el:'#app',
+            data: {
+                textColor:'red',
+                bgColor:'blue',
+            },
+        })
+
+    </script>
+</body>
+</html>
+```
+
+- 先ほどstyke属性に直接値を書いていたが、dataプロパティーのオブジェクトに書いて、バインドするという手法もある
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <script src="https://cdn.jsdelivr.net/npm/vue@2.7.16/dist/vue.js"></script>
+    <div id="app">
+        <h1 :style="styleObject">hello</h1>
+    </div>
+    <script>
+        new Vue({
+            el:'#app',
+            data: {
+                styleObject:{
+                    color: 'red',
+                    'background-color':'blue'
+                }
+            },
+        })
+
+    </script>
+</body>
+</html>
+```
+- 複数のスタイルオブジェクトを配列構文を用いて適応させる
+    - 以下のようにdataプロパティに定義したオブジェクトを配列で適用できる。
+｀``html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <script src="https://cdn.jsdelivr.net/npm/vue@2.7.16/dist/vue.js"></script>
+    <div id="app">
+        <h1 :style="[styleObject,baseStyles]">hello</h1>
+    </div>
+    <script>
+        new Vue({
+            el:'#app',
+            data: {
+                styleObject:{
+                    color: 'red',
+                    'background-color':'blue'
+                },
+                baseStyles:{
+                    fontSize:'600px'
+                }
+            },
+        })
+
+    </script>
+</body>
+</html>
+```
