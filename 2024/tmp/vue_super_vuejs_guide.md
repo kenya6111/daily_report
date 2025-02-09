@@ -1517,3 +1517,393 @@ h1{
 </body>
 </html>
 ```
+
+## 21章(条件付きレンダリングとリストレンダリング)
+- v-if
+    ```html
+    - v-if の値がtrueなら表示。falseなら非表示にできる
+    <body>
+        <script src="https://cdn.jsdelivr.net/npm/vue@2.7.16/dist/vue.js"></script>
+        <div id="app">
+            <p v-if="ok">OK</p>
+            <p v-if="ng">NG</p>
+        </div>
+    <script>
+        new Vue({
+            el:'#app',
+            data: {
+                ok:false,
+                ng:false
+            },
+        })
+    </script>
+
+    </body>
+    </html>
+    ```
+
+    - v-elseでfalseの場合の表示を制御できる
+    - v-else はv-ifやv-else-ifの後に書かないといけない
+    ```html
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Document</title>
+    </head>
+    <body>
+        <script src="https://cdn.jsdelivr.net/npm/vue@2.7.16/dist/vue.js"></script>
+        <div id="app">
+            <p v-if="ok">OK</p>
+            <p v-else>not OK</p>
+            <p v-if="ng">NG</p>
+        </div>
+    <script>
+        new Vue({
+            el:'#app',
+            data: {
+                ok:false,
+                ng:false
+            },
+        })
+    </script>
+
+    </body>
+    </html>
+    ```
+
+    - v-else-ifも使える。 else ifと一緒ってだけ、
+    ```html
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Document</title>
+    </head>
+    <body>
+        <script src="https://cdn.jsdelivr.net/npm/vue@2.7.16/dist/vue.js"></script>
+        <div id="app">
+            <p v-if="ok">OK</p>
+            <p v-else-if="maybeok">maybe OK</p>
+            <p v-else>not OK</p>
+            <p v-if="ng">NG</p>
+        </div>
+    <script>
+        new Vue({
+            el:'#app',
+            data: {
+                ok:false,
+                maybeok:false,
+                ng:false,
+            },
+        })
+    </script>
+
+    </body>
+    </html>
+    ```
+
+    - templateタグにまとめてv-ifを書いて表示非表示を制御することができる
+    ```html
+        <!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Document</title>
+    </head>
+    <body>
+        <script src="https://cdn.jsdelivr.net/npm/vue@2.7.16/dist/vue.js"></script>
+        <div id="app">
+            <button @click="ok = !ok">ボタン</button>
+            <template v-if="ok">
+                <p>OK</p>
+                <p>OK</p>
+                <p>OK</p>
+                <p>OK</p>
+                <p>OK</p>
+            </template>
+        </div>
+        <script>
+            new Vue({
+                el:'#app',
+                data: {
+                    ok:true,
+                    maybeok:false,
+                    ng:false,
+                },
+            })
+        </script>
+    </body>
+    </html>
+    ```
+
+- v-show
+    - v-ifはfalseの時に要素がそもそもレンダリングされない（検証でそもそも要素がない）が、
+    - v-showの場合はfalseの時レンダリングはされ、styleでdisplay:noneが設定され非表示になる
+    - v-showはv-else的な構文がないのでそこは不便
+    - v-showは要素自体は描画するのは先ほど書いた通り。そこからfalseならstyleにdisplaynoneを設定するので初期描画のコストが高いっていうクソなところもある
+    - 逆にv-ifは要素自体をDOMから削除したり追加したりしてるのでボタンでさっき表示非表示を切り替えていたが、そのコストが高い。
+    - なのでカチカチカチカチ表示非表示を切り開ける場合は「v-show」、初期表示時から条件がほぼ変わらないものは「v-if」を使うのが良い
+    ```html
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Document</title>
+    </head>
+    <body>
+        <script src="https://cdn.jsdelivr.net/npm/vue@2.7.16/dist/vue.js"></script>
+        <div id="app">
+            <button @click="ok = !ok">ボタン</button>
+            <template>
+                <p v-show="ok">show</p>
+                <p v-if="ok">if</p>
+            </template>
+        </div>
+        <script>
+            new Vue({
+                el:'#app',
+                data: {
+                    ok:true,
+                    maybeok:false,
+                    ng:false,
+                },
+            })
+        </script>
+    </body>
+    </html>
+    ```
+
+- v-for
+    - v-forでv-forをつけた要素を値の要素分生成できる
+    ```html
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Document</title>
+    </head>
+    <body>
+        <script src="https://cdn.jsdelivr.net/npm/vue@2.7.16/dist/vue.js"></script>
+        <div id="app">
+            <template>
+                <li v-for="fruit in fruits">
+                    {{ fruit }}
+                </li>
+            </template>
+        </div>
+        <script>
+            new Vue({
+                el:'#app',
+                data: {
+                    fruits:['りんご','バナナ','ブドウ']
+                },
+            })
+        </script>
+    </body>
+    </html>
+    ```
+    - v-forは第二引数にindexも取れる
+    ```html
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Document</title>
+    </head>
+    <body>
+        <script src="https://cdn.jsdelivr.net/npm/vue@2.7.16/dist/vue.js"></script>
+        <div id="app">
+            <template>
+                <li v-for="(fruit, index) in fruits">
+                    {{ fruit }}
+                    {{index}}
+                </li>
+                
+            </template>
+        </div>
+        <script>
+            new Vue({
+                el:'#app',
+                data: {
+                    fruits:['りんご','バナナ','ブドウ']
+                },
+            })
+        </script>
+    </body>
+    </html>
+    ```
+
+    - objectももちろんんv-forできる
+    - objectのv-forでは第2引数にkeyをとる仕様になっている。
+    - 第3引数はindexをとる仕様になっている
+    ```html
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    </head>
+    <body>
+        <script src="https://cdn.jsdelivr.net/npm/vue@2.7.16/dist/vue.js"></script>
+        <div id="app">
+            <template>
+                <ul>
+                    <li v-for="(value, key, index) in object">
+                        {{key}}:
+                        {{ value}}
+                        {{index}}
+                    </li>
+                </ul>
+            </template>
+        </div>
+        <script>
+            new Vue({
+                el:'#app',
+                data: {
+                    fruits:['りんご','バナナ','ブドウ'],
+                    object:{
+                        name:'田中',
+                        age:25,
+                        detail:"サウナ大好き"
+                    }
+                },
+            })
+        </script>
+    </body>
+    </html>
+    ```
+
+    -  v-forは整数値においても適用できる
+    - 基本的に in をvueでは使うがofでも大丈夫
+    ```html
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Document</title>
+    </head>
+    <body>
+        <script src="https://cdn.jsdelivr.net/npm/vue@2.7.16/dist/vue.js"></script>
+        <div id="app">
+            <template>
+                <ul>
+                    <li v-for="n in 10">
+                        {{n}}
+                    </li>
+                </ul>
+            </template>
+        </div>
+        <script>
+            new Vue({
+                el:'#app',
+                data: {
+                },
+            })
+        </script>
+    </body>
+    </html>
+    ```
+
+    - 最後に、v-forディレクト部を使う時は必ずキー属性を設定すること。
+    - 予期しないバグが多々生まれるから。
+    ```html
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Document</title>
+    </head>
+    <body>
+        <script src="https://cdn.jsdelivr.net/npm/vue@2.7.16/dist/vue.js"></script>
+        <div id="app">
+            <template>
+                <ul>
+                    <li v-for="(value, index) in fruits" :key="value">
+                        <p> {{value}}</p>
+                        <input type="text">
+                        <p>{{index}}</p>
+                    </li>
+                </ul>
+            </template>
+            <button @click="remove">先頭を削除</button>
+        </div>
+        <script>
+            new Vue({
+                el:'#app',
+                data: {
+                    fruits:['りんご','バナナ','ブドウ'],
+                    object:{
+                        name:'田中',
+                        age:25,
+                        detail:"サウナ大好き"
+                    }
+                },
+                methods:{
+                    remove:function(){
+                        this.fruits.shift()
+                    }
+                }
+            })
+        </script>
+    </body>
+    </html>
+    ```
+
+
+## 22章（Vueインスタンスとその内部構造はこうなっている）
+- Vueインスタンスって複数あってもいいの？？とか仮装ドム、リアクティブシステムとか、内部構造を解明していく。
+
+- Vueインスタンスは複数作ることができる
+    - できるだけ1つのVueインスタンスにまとめるのが好ましい
+    ```html
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Document</title>
+    </head>
+    <body>
+        <script src="https://cdn.jsdelivr.net/npm/vue@2.7.16/dist/vue.js"></script>
+        <div id="app1">
+            {{message}}
+        </div>
+        <div id="app2">
+            {{message}}
+        </div>
+        <script>
+            new Vue({
+                el:'#app1',
+                data: {
+                    message:'インスタンス1'
+                },
+                methods:{
+                    remove:function(){
+                        this.fruits.shift()
+                    }
+                }
+            })
+
+            new Vue({
+                el:'#app2',
+                data:{
+                    message:'インスタンス2'
+                },
+                methods:{
+
+                }
+            })
+        </script>
+    </body>
+    </html>
+    ```
