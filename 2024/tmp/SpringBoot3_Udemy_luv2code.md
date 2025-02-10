@@ -1,4 +1,7 @@
 ## 1章
+- コースの時間→2008分（３３時間ほど）
+- 一日30分ずつ消化で６６日。つまり2ヶ月ほどかかる。
+
 - springBootではすぐ始められるようにHTサーバーは組み込まれている。なので別途Tomcatやundertowなどのサーバを別途インストールしなくていい。
 - Mavenに買い物リストを渡しておくだけで、MavenはこれらのプロジェクトのJARファイルをダウンロードしてくれる｡
 - 「依存関係A､ B､ C､ Dが必要だ｡ そしてMavenは､ これらのJARファイルを取得してクラスパスに追加し､コンパイルと実行時に利用できるようにする｡
@@ -41,3 +44,52 @@ public class FunRestController {
     }
 }
 ```
+
+- Maven 
+    - Mavenはプロジェクトmanagementツール。一番はビルド管理と依存関係の管理につかわれる
+    - Mavenに依存関係を教えてあげるだけで勝手にインターネットからJARファイルをダウンロードしてくれル。
+    - そしてMAvenはコンパイル時やランタイム時にそれらのJARファイルを利用できるようにしてくれル。
+    - 買い物リスト(Spring, JSON, CommonLogging, Hibernate)を渡すだけで買ってきてくれる感じ。
+    - pom.xmlがその買い物リスト
+    - Project Object Model ファイルの略→つまりはプロジェクトの設定ファイル
+    - POMファイル内は(project meta data, dependencies, plug ins)がある
+        - meta dataは基本的にプロジェクトに関する情報。
+            ```xml
+            <groupId>4.0.0</groupId>
+            <artifactId>mycoolapp</artifactId>
+            <version>1.0.FINAL</version>
+            <packaging>jar</packaging>
+
+            <name>mycoolapp</name>
+            ```
+            - プロジェクト座標はプロジェクトを一位に識別する。緯度と軽度緯度と軽度のようなGPSみたいなもの(自分の家を見つける正確な情報、住所みたいなものだと思えばいい。)
+            - groupId=市町村(あなたの会社名、グループ名、組織名。逆ドメインを書く)
+            - artifactIDはstreet(プロジェクトの名前)
+            - versionは部屋番号的な感じ
+        - dependenceisは依存しているもののリスト
+            ```xml
+            <project ...>
+                <dependencies>
+                    <dependency>
+                        <groupId>org.springframework</groupId>
+                        <artifactId>spring-context</artifactId>
+                        <version>6.0.0</version>
+                    </dependency>
+
+                    <dependency>
+                        <groupId>org.hibernate.orm</groupId>
+                        <artifactId>hibernate-core</artifactId>
+                        <version>6.0.4.FINAL</version>
+                    </dependency>
+
+                    ...
+                
+                </dependencies>
+            </project>
+            ```
+            - 依存関係を追加する際は依存セクションにそれらの依存関係を追加するだけ。
+            - 依存関係を追加する際はGroupId,artifactIdが必要。バージョンは実際には任意ですが含めておくのがベスト
+            - 上記３要素をGAVという。（このプロジェクトのGAVはなに？とか聞いたりするｓ）
+            - じゃあ上記のGAVはどこで確認できるのかというと、SpringのwebサイトやHibernateのサイトを見れば、Mavenを使って依存関係を追加する際の必要な詳細が書いてある。
+            - またはMaven central repositoryに行ってそれらの依存関係を検索する方法もある（こっちのが簡単）
+        - plug ins は追加のカスタムタスク的な。
