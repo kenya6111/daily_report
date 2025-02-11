@@ -643,13 +643,13 @@ h1{
     
     ```html
     <!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
-</head>
-<body>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Document</title>
+    </head>
+    <body>
     <script src="https://cdn.jsdelivr.net/npm/vue@2.7.16/dist/vue.js"></script>
     <div id="app">
         <p>{{ message }}</p>
@@ -1486,37 +1486,37 @@ h1{
 ```
 - 複数のスタイルオブジェクトを配列構文を用いて適応させる
     - 以下のようにdataプロパティに定義したオブジェクトを配列で適用できる。
-｀``html
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
-</head>
-<body>
-    <script src="https://cdn.jsdelivr.net/npm/vue@2.7.16/dist/vue.js"></script>
-    <div id="app">
-        <h1 :style="[styleObject,baseStyles]">hello</h1>
-    </div>
-    <script>
-        new Vue({
-            el:'#app',
-            data: {
-                styleObject:{
-                    color: 'red',
-                    'background-color':'blue'
+    ```html
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Document</title>
+    </head>
+    <body>
+        <script src="https://cdn.jsdelivr.net/npm/vue@2.7.16/dist/vue.js"></script>
+        <div id="app">
+            <h1 :style="[styleObject,baseStyles]">hello</h1>
+        </div>
+        <script>
+            new Vue({
+                el:'#app',
+                data: {
+                    styleObject:{
+                        color: 'red',
+                        'background-color':'blue'
+                    },
+                    baseStyles:{
+                        fontSize:'600px'
+                    }
                 },
-                baseStyles:{
-                    fontSize:'600px'
-                }
-            },
-        })
+            })
 
-    </script>
-</body>
-</html>
-```
+        </script>
+    </body>
+    </html>
+    ```
 
 ## 21章(条件付きレンダリングとリストレンダリング)
 - v-if
@@ -1865,6 +1865,7 @@ h1{
 
 - Vueインスタンスは複数作ることができる
     - できるだけ1つのVueインスタンスにまとめるのが好ましい
+    - vueインスタンス.〇〇で各Vueインスタンス内のプロパティにアクセスできる
     ```html
     <!DOCTYPE html>
     <html lang="en">
@@ -1907,3 +1908,308 @@ h1{
     </body>
     </html>
     ```
+
+    - 以下のようにVueインスタンス内から別のVueインスタンス内の変数にアクセスする際もVueインスタンス.○○って感じで書く
+    ```html
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Document</title>
+    </head>
+    <body>
+        <script src="https://cdn.jsdelivr.net/npm/vue@2.7.16/dist/vue.js"></script>
+        <div id="app1">
+            {{message}}
+        </div>
+        <div id="app2">
+            {{message}}
+            <button @click="changeMessage">change Mwssage</button>
+        </div>
+        <script>
+            var vm1 = new Vue({
+                el:'#app1',
+                data: {
+                    message:'インスタンス1'
+                },
+                methods:{
+                    remove:function(){
+                        this.fruits.shift()
+                    }
+                }
+            })
+            vm1.message='買い換えられました!'
+
+            var vm2 = new Vue({
+                el:'#app2',
+                data:{
+                    message:'インスタンス2'
+                },
+                methods:{
+                    changeMessage:function(){
+                        vm1.message="メソッドによって書き換えられました"
+                    }
+                }
+            })
+        </script>
+    </body>
+    </html>
+    ```
+- 
+    - 上記に続いてVueインスタンス.〇〇=△△って感じで新たにプロパティを定義してもそれはリアクティブにならない。
+    - リアクティブとか簡単にいうと,Vueインスタンス内の値が変わるとhtmlに表示される値も自動で変わること
+    - 以下のようにvm1に対して新たにVueインスタンス外からプロパティを設定しても。それはリアクティブにはならない。
+    - ボタンでdataプロパティを変える処理を実行しても、「タナケン」から変化することはない。
+    ```html
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    </head>
+    <body>
+        <script src="https://cdn.jsdelivr.net/npm/vue@2.7.16/dist/vue.js"></script>
+        <div id="app1">
+            {{message}}
+            {{ name}}
+            <button @click="message='メッセージ変更'">メッセージを変更</button>
+            <button @click="changeName">名前を変更</button>
+        </div>
+        <script>
+            var vm1 = new Vue({
+                el:'#app1',
+                data: {
+                    message:'インスタンス1'
+                },
+                methods:{
+                    remove:function(){
+                        this.fruits.shift()
+                    },
+                    changeName: function(){
+                        this.name="名前を変えました。"
+                    }
+                }
+            })
+            vm1.name="タナケン"
+            console.log(vm1)
+        </script>
+    </body>
+    </html>
+    ```
+
+    - そもそもvueでリアクティブであるための前提条件として、data部分にリアクティブにしたい変数を置いておく必要がある。
+        - なので、後付けで「vm1.name="タナケン"」と定義してもそれはリアクティブにはならない
+    - じゃあなんでdata部分に定義しないといけないのか。
+        - それは、vueはVueインスタンスが作成された時に、そこに書かれているすべてのプロパティを読み取る。
+        - かつ、それぞれのプロパティに対してgetter,setterを作る
+        - getter はそれらの変数が参照されたときに呼ばれるのがgetter。
+        - setter はそれらの変数が書き換わったときに呼ばれる
+        - このgetter,setterが定義されているdataのプロパティはリアクティブになる。
+        - 上記のconsole.log(vm1)の結果を検証ツールで見てみると、vm1.name=○○○ と定義した場合、getter,setterが生成されていないことがわかる。
+        - 逆にdatapウロパティ内で定義したｍessageはgetter,setterがちゃんと定義されている
+
+- Vueインスタンスをコンソール出力した結果した結果⇩
+    - 基本的にユーザが使うものは「＄」がついている
+    - vueではユーザ定義のプロパティ（上記でいうｍessageとか自分で書いた変数のこと）を区別するために頭に＄がつけられている
+    ![alt text](../../image/image5.png)
+
+- $mountで、elプロパティの代わりになる
+    - これはあまり使わない。基本elプロパティを使う
+    - $mountはelを指定していないVueインスタンスに対して適用できる。つまりすでにマウントしてしまったVueインスタンスを再度マウントすることはできない
+    ```html
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Document</title>
+    </head>
+    <body>
+        <script src="https://cdn.jsdelivr.net/npm/vue@2.7.16/dist/vue.js"></script>
+        <div id="app1">
+            {{message}}
+        </div>
+        <div id="app2">
+            {{ message2}}
+        </div>
+        <script>
+            var vm1 = new Vue({
+                // el:'#app1',
+                data: {
+                    message:'メッセ１',
+                    message2:'メっセ２'
+                },
+                methods:{
+                    remove:function(){
+                        this.fruits.shift()
+                    },
+                    changeName: function(){
+                        this.name="名前を変えました。"
+                    }
+
+                }
+            })
+
+            console.log(vm1)
+            vm1.$mount('#app2')
+        </script>
+    </body>
+    </html>
+    ```
+
+- templateプロパティ
+    - 画面に描画するhtmlはtemplateプロパティに書くことができる
+    - すべて文字列にするので普通にhtmlに書いた方が全然良い。
+    - 基本使わないがたまーに使ってるところがあるって感じ。
+    ```html
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    </head>
+    <body>
+        <script src="https://cdn.jsdelivr.net/npm/vue@2.7.16/dist/vue.js"></script>
+        <div id="app2">
+        </div>
+        <script>
+            var vm2 = new Vue({
+                el:'#app2',
+                data: {
+                    name:"tanakeknn"
+                },
+                methods:{
+                    remove:function(){
+                        this.fruits.shift()
+                    },
+                    changeName: function(){
+                        this.name="名前を変えました。"
+                    }
+                },
+                template:'<h2>{{name}}</h2>'
+            })
+        </script>
+    </body>
+    </html>
+    ```
+
+    - ちなみに、以下のようにelプロパティではなく、Vueインスタンsの最後に$mount('app2')って感じでもマウントできる
+    ```html
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Document</title>
+    </head>
+    <body>
+        <script src="https://cdn.jsdelivr.net/npm/vue@2.7.16/dist/vue.js"></script>
+        <div id="app1">
+            {{message}}
+        </div>
+        <div id="app2">
+        </div>
+        <script>
+            var vm2 = new Vue({
+                // el:'#app2',
+                data: {
+                    name:"tanakeknn"
+                },
+                methods:{
+                    remove:function(){
+                        this.fruits.shift()
+                    },
+                    changeName: function(){
+                        this.name="名前を変えました。"
+                    }
+                },
+                template:'<h2>{{name}}</h2>'
+            }).$mount('#app2')
+
+        </script>
+    </body>
+    </html>
+    ```
+- renderプロパティ（関数）
+    - DOM(document object model)。documentはブラウザ（chrome）がhtmlを受け取ることで、DOMに変換させる。つまりツリー型のオブジェクトにさせる
+    - documentはすでにブラウザで定義されているもの。その時作ったhtmlを見てブラウザがdocumentというオブジェクトを作ってくれている
+    - 以下画像の１行目の出力が以下。htmlっぽく表示したものが表示されている。検証ツールのelementで表示させてるhtmlはhtml「っぽく」表示させているだけ。
+    「const dir = document.createElement('div')
+      console.log(dir)」
+    - 2行目の出力が以下。
+    「console.log(document)」
+    - 3行目の出力が以下。この出力方法でDOMを見れる
+    「console.dir(document)」
+        ![alt text](../../image/image6.png)
+    
+    - 以下のようにrenderでもhtmlを生成できる
+    ```html
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    </head>
+    <body>
+        <script src="https://cdn.jsdelivr.net/npm/vue@2.7.16/dist/vue.js"></script>
+        <div id="app1">
+            {{message}}
+        </div>
+        <div id="app2"></div>
+        <div id="app3"></div>
+        <script>
+            var vm3 = new Vue({
+                el:'#app3',
+                data: {
+                    name:"tanakeknn"
+                },
+                methods:{
+                    remove:function(){
+                        this.fruits.shift()
+                    },
+                    changeName: function(){
+                        this.name="名前を変えました。"
+                    }
+                },
+                render:function(createElement){
+                    return createElement('h1','こんにちは'+this.name)
+                }
+            })
+            const dir = document.createElement('div')
+            console.log(dir)
+            console.log(document)
+            console.dir(document)
+        </script>
+    </body>
+    </html>
+    ```
+
+    - renderで返している、createElement()とは何を返しているか。
+        - documentの方はDOMがコンソールに返されていたが,こちらでは「VNode」が返される。別名「仮想ノード」
+        - こっちはDOM要素ではなく、「仮想DOM」を生成している
+        - 仮想DOMを作るためにcreateElement()ってのをrenderで使っている。
+        - そしてDOMに反映しているのはまた別の場所になります。
+        - つまりdocument.createElementは直接DOMにアクセスしていて、renderのcreateElementはただ情報をvueの奥底の仮想DOMってとこに与えて、vueがその値を受け取ってから実際にDOMを作る
+    ![alt text](../../image/image7.png)
+
+    - ちなみに、htmlにタグとか書いたのも、templateウロパティに書いたのも、結局
+    Vueインスタンスが作られるときにすべてrender関数に変換されています。
+    - 仮想のーどで仮想的なDOMを作っって実際のDOMに反映させている
+
+- 仮想DOMに関して
+    - 仮想DOMとはDOM要素を模したjsのオブジェクト
+    - なんでvueでは仮想DOMなんて使ってんの？？
+        - 前提としてdocumentを使ってDOMを追加したり削除したり参照したり(getElementByIdとかcreateElementとか)する場合、ものすごく遅いらしい。
+            - DOMに直接アクセスしてDOMに何か処理を加える、追加、削除とかは非常に遅い。パフォが悪い。
+        - じゃあDOMを変える時にどういうふうにしたら効率よく早く変えれるか。
+            - それは変更する箇所だけ（ヘッダのpタグの中身変えるならそこだけとか。）変えるようにすれば効率的。
+        - じゃあどうやって部分的にDOMを変えられるか
+            - 画面操作した際に新たにDOMを全部作るのがコストなのはさっき書いた通り。documentはブラウザに定義されてjsファイルに定義されてないから、そこへのアクセスが時間かかる。要はDOMにアクセスするのは大変。
+            - そこで仮想DOM。これはDOMをjsのただのオブジェクトとして扱う。js側でオブジェクト状のDOMを持たせておいて、そこへの値の追加削除変更はめちゃくちゃ早くできる。
+            - で、じゃあもう仮想的にそのDOMをコピーしたjsnoオブジェクトを持っておいて、でなんか値の変更された時にjs側の仮想DOMを変更して、変更前の仮想DOMを見比べて、
+            - で実際の仮想DOMのその差分だけを実際のDOMに適応させる。ってことで効率化してる。
+            - これが仮想DOMの必要な理由。めちゃめちゃDOMの変更を効率的にするもの。
