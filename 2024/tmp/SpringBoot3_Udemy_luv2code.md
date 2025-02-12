@@ -53,6 +53,7 @@ public class FunRestController {
     - pom.xmlがその買い物リスト
     - Project Object Model ファイルの略→つまりはプロジェクトの設定ファイル
     - POMファイル内は(project meta data, dependencies, plug ins)がある
+    - POMファイルにはSpringinitializerで入寮したものが含まれている
         - meta dataは基本的にプロジェクトに関する情報。
             ```xml
             <groupId>4.0.0</groupId>
@@ -83,7 +84,6 @@ public class FunRestController {
                     </dependency>
 
                     ...
-                
                 </dependencies>
             </project>
             ```
@@ -93,3 +93,6 @@ public class FunRestController {
             - じゃあ上記のGAVはどこで確認できるのかというと、SpringのwebサイトやHibernateのサイトを見れば、Mavenを使って依存関係を追加する際の必要な詳細が書いてある。
             - またはMaven central repositoryに行ってそれらの依存関係を検索する方法もある（こっちのが簡単）
         - plug ins は追加のカスタムタスク的な。
+
+        - View　→ Tool Window → Maven → dependenciesから spring initializerで追加した依存関係が見れる
+        

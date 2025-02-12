@@ -2213,3 +2213,82 @@ h1{
             - で、じゃあもう仮想的にそのDOMをコピーしたjsnoオブジェクトを持っておいて、でなんか値の変更された時にjs側の仮想DOMを変更して、変更前の仮想DOMを見比べて、
             - で実際の仮想DOMのその差分だけを実際のDOMに適応させる。ってことで効率化してる。
             - これが仮想DOMの必要な理由。めちゃめちゃDOMの変更を効率的にするもの。
+
+- Vueインスタンスライフサイクル
+    ![alt text](../../image/image8.png)
+    - 最初はnew Vue()から始まる
+    - そうするとすぐにbeforeCreate()をおいておくことでそこが走るそこが走る
+    - ここではまだ何も作られてない。
+    - 次にインスタンスが作成される(ここでdatapプロパティがすべてリアクティブになる。methodsmおアクセスできるようになるし、computedにもアクセスできるようになる)
+    - 次にcreated()が走る
+    - 次にelプロパティがあるかどうかが見られる。
+        - あれば、templateはすべてrender関数にすべてコンパイルされる(templateってのはhtmlとして書いてたやつと、templateプロパティに文字列として書いてたやつ)
+        - なかったら、vm.$mountが時効されたタイミングで、templateをrenderにコンパイルする。
+    - render関数ではVNode（仮想ノード）ってのを返していたと思うが、それをくっつけて仮想DOMにする前がbeforeMount()
+    - その次に仮想DOM作って
+    - その仮想DOMを実際のDOMにする。それを$elプロパティの要素に適応させる
+    - そうするとマウントされたことになる。
+    - beforeUpdate()は仮想DOMから実際のDOMに変換はまだしてない状態
+    - updated()は仮想DOMを使ってDOMを再描画した後のこと。
+
+    - dataやmethodsにアクセスできるのはcreatedが呼ばれた時。
+    - DOMに直接アクセスしたいときはmountedが呼ばれた時
+    - updatedはDOMを再描画する前後が契機となっている。値がどこかしら書き換わればその差分を仮想DOMで検出して仮想のDOMを作って、実際のDOMNI適用って流れなので、逆に２回目３回目に以下ソースの名前変更ボタン押しても、ｎameは変わらないので、仮想DOMの差分もなく、実際のDOMに何も反映されずアップデートされないってことになるので、beforeUpdateとupdatedは2,3k藍目押しても呼ばれない
+    ```html
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Document</title>
+    </head>
+    <body>
+        <script src="https://cdn.jsdelivr.net/npm/vue@2.7.16/dist/vue.js"></script>
+        <div id="app4">
+            <p>こんにちは</p>
+            <p>{{name}}</p>
+            <button @click="name='太郎さん'">名前を変更</button>
+            <button @click="destroy">インスタンスを破壊</button>
+        </div>
+        <script>
+            new Vue({
+                el:'#app4',
+                data:{
+                    name:'よしピー'
+                },
+                beforeCreate: function(){
+                    console.log('befoerCreate')
+                },
+                created:function(){
+                    console.log('created')
+                },
+                beforeMount: function(){
+                    console.log('beforeMount')
+                },
+                mounted: function(){
+                    console.log('Mounted')
+                },
+                beforeUpdate: function(){
+                    console.log('beforeUpdate')
+                },
+                updated:function(){
+                    console.log('updated')
+                },
+                beforeDestroy: function(){
+                    console.log('beforeDestroyed')
+                },
+                destroyed: function(){
+                    console.log('destroyed')
+                },
+                methods:{
+                    destroy:function(){
+                        this.$destroy()
+                    }
+                }
+
+            })
+
+        </script>
+    </body>
+    </html>
+    ```
