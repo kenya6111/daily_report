@@ -50,3 +50,16 @@
 
     - cd（current directly）
     - pwd(print working directory)
+
+## 3章
+- docker hubとは
+    - docker imageを管理するDockerレジストリ
+    - docker imageはコンテナを作る元になる
+    - 基本的にimageを誰かに渡してコンテナの情報を共有する
+    - githubはコードを管理するレジストリだが、これはimageを管理するレジストリ
+    - いろんな人のdocker imageが管理されてるのでそれのダウンロードに使うくらいで、docker hubにアクセスして自分で何かするってことはあまりないっぽい
+
+- docker desktop
+    - mac用のdockerのアプリ。docker hubにログインしたらインストールできた
+    - macのホーム画面の上のdockerマーク押下時に緑のマークになってればすでにdockerが動いている状態になる
+    - 
