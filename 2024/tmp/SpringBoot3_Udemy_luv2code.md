@@ -298,3 +298,511 @@ public class FunRestController {
     - 以下を設定すると、すべてのリクエスとのパスにmycoolappがプレフィックすがつけられる
         - 「server.servlet.contextpath=/mycoolapp」
         - よって「http://localhost:7070/mycoolapp/coach」な感じですべてのパスにmycoolappをつけることになる
+
+
+## 2章（Spring Core）
+- Inversion of control（DI-依存性の注入）
+    - 俺たちがオブジェクトを生成はせず、アプリに作ってもらうこと。
+    - インスタンスの生成と依存関係の注入をDIコンテナが提供する
+    - DIコンテナの主な機能
+        - インスタンスの生成と管理などライフサイクルを生業できる
+        - 依存関係の注入ができる
+    
+    - injectionには2種類ある
+        - Constructor Injection
+        - Setter Injection
+    
+    - Auto Wiringとは
+        - @Autowired
+            - Springに依存関係を注入するように指示している。
+    
+    - @Componentアノテーション
+        - これをクラスにつけるとSpring Beanとして認識される（依存性注入の候補になる）
+        - つまり依存性注入に利用できるようにしてくれるアノテーション。
+    
+    - @Autowiredアノテーション
+        - Autowiredは依存関係を注入するようにspringに命令する
+
+- サンプル
+    - 以下のように３ファイル用意した。
+    - DemoController.java
+    ```java
+    package com.luv2code.springcoredemo;
+
+    import org.springframework.beans.factory.annotation.Autowired;
+    import org.springframework.boot.autoconfigure.AutoConfiguration;
+    import org.springframework.web.bind.annotation.GetMapping;
+    import org.springframework.web.bind.annotation.RestController;
+
+    @RestController
+    public class DemoController {
+        private Coach myCoach;
+
+        @Autowired
+        public DemoController(Coach theCoach){
+            myCoach = theCoach;
+        }
+        @GetMapping("dailyworkout")
+        public String getDailyWorkout(){
+            return myCoach.getDailyWorkout();
+        }
+    }
+    ```
+
+    - CricketCoach.java
+    ```java
+    package com.luv2code.springcoredemo;
+
+    import org.springframework.stereotype.Component;
+
+    @Component
+    public class CricketCoach implements Coach{
+        @Override
+        public String getDailyWorkout() {
+            return "practice fast bowling  for 1256 minutes";
+        }
+    }
+    ```
+
+    - Coach.java
+    ```java
+    package com.luv2code.springcoredemo;
+    public interface Coach {
+        String getDailyWorkout();
+    }
+    ```
+
+    - 上記で画面にはpractice fast bowling  for 1256 minutesが表示される
+    - 以下、自分で調べた裏側の動き
+    ```txt
+    public class DemoController {
+        private Coach myCoach;
+
+        @Autowired
+        public DemoController(Coach theCoach){
+            myCoach = theCoach;
+        }
+        @GetMapping("dailyworkout")
+        public String getDailyWorkout(){
+            return myCoach.getDailyWorkout();
+        }
+    }
+
+    Q.なんでDemoControllerでインジェクトするのがCoachなのか（最初からCricketCoachとかBasebollCoachとかをAutowiredすればいいやないか）
+    A.ダメじゃない。でも 将来の変更に弱いコード になっちゃう。
+    小さいアプリなら CricketCoach 直指定でも問題ないけど、拡張性を考えると インターフェースを使う方がベストプラクティス なんだ。
+    「後で変えたくなったら修正しなくちゃいけない」ってのを避けるために、最初から Coach を指定して、Spring に実装の選択を任せるのがスマートな方法ってこと！
+
+    具体的な説明は以下⇩
+    Spring の DI（依存性注入） の考え方は、「具体的な実装（CricketCoach）ではなく、抽象（Coach）に依存する」 という設計原則に基づいている。
+    もし以下のように書くと
+    @Autowired
+    public DemoController(CricketCoach theCoach){
+        myCoach = theCoach;
+    }
+    DemoController は CricketCoach にガチガチに依存する ことになる。
+
+    これの何が問題なのか？？
+
+    例えば、後で「やっぱ BaseballCoach に変えたいな」と思ったときに、この DemoController を 毎回変更しなきゃいけない。
+
+    @Autowired
+    public DemoController(BaseballCoach theCoach){
+        myCoach = theCoach;
+    }
+
+    プロジェクト全体で 100個のクラスが BaseballCoach に依存していたら？
+    → 100箇所の修正が必要 になるよね
+
+    🟢 Coach を指定する場合
+    @Autowired
+    public DemoController(@Coach theCoach){
+        myCoach = theCoach;
+    }
+
+    - @Primaryで、DemoController のコードは 一切変更しなくても、Spring が BaseballCoach を自動で選んでくれる。
+    @Component
+    @Primary  // これをつけた Coach がデフォルトで選ばれる
+    public class BaseballCoach implements Coach {
+        @Override
+        public String getDailyWorkout() {
+            return "Practice hitting for 30 minutes";
+        }
+    }
+
+    その中で部分的に他のコートをdemoControllerで使いたいとなれば「@Qualifier」を使えばいい・
+    @Autowired
+    public DemoController(@Qualifier("baseballCoach") Coach theCoach){
+        myCoach = theCoach;
+    }
+    ```
+
+- コンポーネントScan
+    - Springはjavaクラスや@Component裏酢などの特別なアノテーションをスキャンし自動でSpringコンテナにビーンズを登録します
+    - コンポーネント Sキャンはメインのspringbootapplicationだけに行われる(要はアプリ起動時に実行する@springbootapplicationアノテーショんを持つクラスのこと)
+    ![alt text](../../image/image9.png)
+
+    - デフォルトはプロジェクトの名前のディレクトリは以下だけが Sキャンされる。
+    - ので以下のようにcom.luv2code配下にspringcoredemo(最初に作ったプロジェクト名)の他にディレクトリ追加してそこにインジェクトされていたクラスを写すとスキャンされないので、そのクラスをつ買っていたdemocontrolerでは見つけられませんとエラーが起こり機動に失敗する。
+    - なので、@springBootApplicationアノテーションに以下の引数を追加してスキャンできるディレクトリを追加してあげる
+    ```java
+    @SpringBootApplication(
+		scanBasePackages = {"com.luv2code.springcoredemo",
+							"com.luv2code.util"}
+    )
+    ```
+    ![alt text](../../image/image10.png)
+
+- setter Injection
+    - クラスのセッターメソッドを呼び出すことで依存関係を注入すること。
+    - @Autowiredのところで、さっきはインスタンスメソッドだったが、セッターメソッドでも良い。その場合、名前はなんでもいい。勝手にインジェクションしてくれる
+    ```java
+    package com.luv2code.springcoredemo.rest;
+
+    import com.luv2code.springcoredemo.common.Coach;
+    import org.springframework.beans.factory.annotation.Autowired;
+    import org.springframework.web.bind.annotation.GetMapping;
+    import org.springframework.web.bind.annotation.RestController;
+
+    @RestController
+    public class DemoController {
+        private Coach myCoach;
+
+    //    @Autowired
+    //    public DemoController(Coach theCoach){
+    //        myCoach = theCoach;
+    //
+    //    }
+
+        @Autowired
+        public  void setCoach(Coach theCoach){
+            myCoach = theCoach;
+        }
+
+
+        @GetMapping("dailyworkout")
+        public String getDailyWorkout(){
+            return myCoach.getDailyWorkout();
+        }
+
+
+    }
+    ```
+
+- Field Injection
+    - 最近は非推奨のインジェクション方法
+    - コードのユニットテストが難しくなるから
+
+- Qualifierアノテーション
+    - Qualifierアノテーションでどのクラスをインジェクトするか指定できる
+    - basebollCoach, tennisCOachなど、同じCoachk裏巣をimplementsし@component付きのCoachのクラスがたくさんいる場合は
+    - 基本どれかに＠Primaryをつけて、例外的に他のCoachを使いたい場合に「Qualifier」を使う
+
+    ```java
+    package com.luv2code.springcoredemo.rest;
+
+    import com.luv2code.springcoredemo.common.Coach;
+    import org.springframework.beans.factory.annotation.Autowired;
+    import org.springframework.beans.factory.annotation.Qualifier;
+    import org.springframework.web.bind.annotation.GetMapping;
+    import org.springframework.web.bind.annotation.RestController;
+
+    @RestController
+    public class DemoController {
+        private Coach myCoach;
+
+        @Autowired
+        public DemoController(@Qualifier("trackCoach") Coach theCoach){
+            myCoach = theCoach;
+        }
+
+        @GetMapping("dailyworkout")
+        public String getDailyWorkout(){
+            return myCoach.getDailyWorkout();
+        }
+    }
+    ```
+
+- Primaryアノテーション
+    - 以下のようにコントローラでインタフェースのコーチをインジェクションしている場合、そのインタフェースをimplementsしているCoachが複数あってそれぞれにcomponentがついている場合、そのどれかに@Primaryを追加で付与すればそれがデフォルトでインジェクションされる。
+    ```java
+    package com.luv2code.springcoredemo.rest;
+
+    import com.luv2code.springcoredemo.common.Coach;
+    import org.springframework.beans.factory.annotation.Autowired;
+    import org.springframework.beans.factory.annotation.Qualifier;
+    import org.springframework.web.bind.annotation.GetMapping;
+    import org.springframework.web.bind.annotation.RestController;
+
+    @RestController
+    public class DemoController {
+        private Coach myCoach;
+
+        @Autowired
+        public DemoController(Coach theCoach){
+            myCoach = theCoach;
+        }
+
+        @GetMapping("dailyworkout")
+        public String getDailyWorkout(){
+            return myCoach.getDailyWorkout();
+        }
+    }
+    ```
+    - TrackCoach.java
+    ```java
+    package com.luv2code.springcoredemo.common;
+    import org.springframework.context.annotation.Primary;
+    import org.springframework.stereotype.Component;
+
+    @Component
+    @Primary
+    public class TrackCoach implements Coach{
+        @Override
+        public String getDailyWorkout() {
+            return "RUn a hard 5 k";
+        }
+    }
+    ```
+
+- LazyInitialization(遅延初期化)
+    - デフォルトではすべてのコンポーネントをスキャンし初期化する
+    - 遅延初期化とは、そのフィールドが必要となるまで初期化を遅らせる行為のことを指します。遅延初期化を行う理由としては、初期化に多大なコストがかかるフィールドが存在した場合、遅延初期化を実装することによってパフォーマンスを向上させることができる点が挙げられます。
+    - 「必要となるまで」というのは「依存性の注入に使われるとき」や「明示的に使われる時」である
+    - @Lazyをつけるだけで遅延初期化が適用される
+    - 「実際に必要とされない限り、私を作るな」ということになる
+
+    - ただ全部のコンポーネントクラスに1つ1つ@Lazyをつけていくのはクソだるい
+        - なので。propertiesファイルで「spring.main.lazy-initialization=true」を設定しておけばすべてのビーンズを遅延型にできる
+
+    - DemoCOntroller.java
+    ```java
+    package com.luv2code.springcoredemo.rest;
+
+    import com.luv2code.springcoredemo.common.Coach;
+    import org.springframework.beans.factory.annotation.Autowired;
+    import org.springframework.beans.factory.annotation.Qualifier;
+    import org.springframework.web.bind.annotation.GetMapping;
+    import org.springframework.web.bind.annotation.RestController;
+
+    @RestController
+    public class DemoController {
+        private Coach myCoach;
+
+        @Autowired
+        public DemoController(@Qualifier("cricketCoach") Coach theCoach){
+            System.out.println("In constructor :" + getClass().getSimpleName());
+            myCoach = theCoach;
+        }
+
+        @GetMapping("dailyworkout")
+        public String getDailyWorkout(){
+            return myCoach.getDailyWorkout();
+        }
+    }
+    ```
+
+    - CricketCoach.java
+    ```java
+    package com.luv2code.springcoredemo.common;
+    import org.springframework.context.annotation.Primary;
+    import org.springframework.stereotype.Component;
+
+    @Component
+    public class CricketCoach implements Coach{
+        public CricketCoach(){
+            System.out.println("In constructor :" + getClass().getSimpleName());
+        }
+        @Override
+        public String getDailyWorkout() {
+            return "practice fast bowling  for 1256 minutes!!!!!!!!!!";
+        }
+    }
+    ```
+
+    - BasebollCoach.java
+    ```java
+    package com.luv2code.springcoredemo.common;
+    import org.springframework.stereotype.Component;
+
+    @Component
+    public class BasebollCoach  implements Coach{
+
+        public BasebollCoach(){
+            System.out.println("In constructor :" + getClass().getSimpleName());
+        }
+
+
+        @Override
+        public String getDailyWorkout() {
+            return "Spring 30 minutes in batting practice ";
+        }
+    }
+    ```
+
+    - TennisCoach.java
+    ```java
+    package com.luv2code.springcoredemo.common;
+
+    import org.springframework.stereotype.Component;
+
+    @Component
+    public class TennisCoach implements Coach{
+        public TennisCoach(){
+            System.out.println("In constructor :" + getClass().getSimpleName());
+        }
+
+        @Override
+        public String getDailyWorkout() {
+            return "Practice your backend volley";
+        }
+    }
+    ```
+
+    - TrackCoach.java
+    ```java
+    package com.luv2code.springcoredemo.common;
+
+    import org.springframework.context.annotation.Lazy;
+    import org.springframework.context.annotation.Primary;
+    import org.springframework.stereotype.Component;
+
+    @Component
+    public class TrackCoach implements Coach{
+        public TrackCoach(){
+            System.out.println("In constructor :" + getClass().getSimpleName());
+        }
+        @Override
+        public String getDailyWorkout() {
+            return "RUn a hard 5 k";
+        }
+    }
+    ```
+
+    - 上記でアプリ起動時は以下のログが出る。すべてのコンポおー年とが初期化されている
+    ```txt
+    2025-02-16T21:27:26.618+09:00  INFO 54711 --- [springcoredemo] [  restartedMain] w.s.c.ServletWebServerApplicationContext : Root WebApplicationContext: initialization completed in 325 ms
+    In constructor :BasebollCoach
+    In constructor :CricketCoach
+    In constructor :TennisCoach
+    In constructor :TrackCoach
+    In constructor :DemoController
+    ```
+
+    - TrackCoachだけに「＠Lazy」アノテーションを付与すると、アプリ起動時はログに出てこない、つまり初期化されてない
+    - trackCoachは特にインジェクションなど必要とされていないので出番がないからだ。出番が来たら、その時に初期化される。
+        ```java
+        package com.luv2code.springcoredemo.common;
+
+        import org.springframework.context.annotation.Lazy;
+        import org.springframework.context.annotation.Primary;
+        import org.springframework.stereotype.Component;
+
+        @Component
+        @Lazy
+        public class TrackCoach implements Coach{
+            public TrackCoach(){
+                System.out.println("In constructor :" + getClass().getSimpleName());
+            }
+            @Override
+            public String getDailyWorkout() {
+                return "RUn a hard 5 k";
+            }
+        }
+        ```
+        ```txt
+        2025-02-16T21:28:25.837+09:00  INFO 54711 --- [springcoredemo] [  restartedMain] w.s.c.ServletWebServerApplicationContext : Root WebApplicationContext: initialization completed in 78 ms
+        In constructor :BasebollCoach
+        In constructor :CricketCoach
+        In constructor :TennisCoach
+        In constructor :DemoController
+        ```
+
+        - propertiesファイルに以下のように書くと、すべてのビーンが遅延型になる
+            ```properties
+            spring.main.lazy-initialization=true
+            ```
+            - これでアプリ起動してみると何も初期化されていない
+            - http://localhost:8080/dailyworkoutにアクセスして初めて以下のログが出ている。2つだけコンポーネントが初期化されている
+            ```txt
+            In constructor :CricketCoach
+            In constructor :DemoController
+            ```
+
+- Bean Scopes
+    - 「Spring コンテナが Bean をどのように管理・生成・共有するかを決める設定」のこと
+    - 「どのタイミングでオブジェクトを作るべきか？」 によって選択するのが重要！
+    - デフォルトスコープはsingleton
+
+    - sngleton
+        - アプリケーション全体で 1つのインスタンス だけを作る
+        - そのBeanに対するすべての依存性注入は同じBeanを参照することになる。
+        - 以下の場合は、特にBeanのスコープを指定していないので、すべてのBeanがsingletonになる
+        - なので、theCoachとtheAnotherCoachは同じインスタンスになる。
+        - 「http://localhost:8080/check」にアクセス時には「comparing beans : myCoach == anotherCoach true」が表示される。
+        ```java
+        package com.luv2code.springcoredemo.rest;
+
+        import com.luv2code.springcoredemo.common.Coach;
+        import org.springframework.beans.factory.annotation.Autowired;
+        import org.springframework.beans.factory.annotation.Qualifier;
+        import org.springframework.web.bind.annotation.GetMapping;
+        import org.springframework.web.bind.annotation.RestController;
+
+        @RestController
+        public class DemoController {
+            private Coach myCoach;
+            private Coach anotherCoach;
+
+            @Autowired
+            public DemoController(@Qualifier("cricketCoach") Coach theCoach,
+                                @Qualifier("cricketCoach") Coach theAnotherCoach){
+                System.out.println("In constructor :" + getClass().getSimpleName());
+                myCoach = theCoach;
+                anotherCoach = theAnotherCoach;
+            }
+
+            @GetMapping("dailyworkout")
+            public String getDailyWorkout(){
+                return myCoach.getDailyWorkout();
+            }
+
+            @GetMapping("/check")
+            public String check(){
+                return "comparing beans : myCoach == anotherCoach"+(myCoach == anotherCoach);
+            }
+        }
+        ```
+    - prototype
+        - @Autowiredするたびに新しいインスタンス を作る
+        - 「@Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)」でBeanのスコープを指定できる。
+        ー今回はprototypeに設定し、「comparing beans : myCoach == anotherCoach false」が表示される。
+        ```java
+        package com.luv2code.springcoredemo.common;
+
+        import org.springframework.beans.factory.config.ConfigurableBeanFactory;
+        import org.springframework.context.annotation.Primary;
+        import org.springframework.context.annotation.Scope;
+        import org.springframework.stereotype.Component;
+
+        @Component
+        @Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
+        public class CricketCoach implements Coach{
+            public CricketCoach(){
+                System.out.println("In constructor :" + getClass().getSimpleName());
+            }
+            @Override
+            public String getDailyWorkout() {
+                return "practice fast bowling  for 1256 minutes!!!!!!!!!!";
+            }
+        }
+
+        ```
+    - request
+        - HTTPリクエストごとに新しいインスタンス
+    - session
+    - application
+    - websocket
+
+- Bean Lifecycle Methods
+    - Spring Beanが生成されてから破棄されるまでの過程を指します
