@@ -62,4 +62,192 @@
 - docker desktop
     - mac用のdockerのアプリ。docker hubにログインしたらインストールできた
     - macのホーム画面の上のdockerマーク押下時に緑のマークになってればすでにdockerが動いている状態になる
-    - 
+
+## 4章（Dockerを使ってみる）
+- what is docker
+    - 簡単にいうとAさんとBさんが開発環境や実行環境をチームで同じものを使うために使うもの
+    - A,Bさんは同じアプリを作ってるので同じ開発環境である必要がある(使ってるライブラりやバージョン)
+    - テスト環境や本番環境も開発環境と同じ必要がある・
+        - ここが違うと、Aさんの開発環境でテストしてOKだったけど、テスト環境では動かなかったみたいなことが起こる。
+    - これをコンテナを使うことで、同じ環境を簡単に高速に構築できる
+    - docker hubからdockerimageをローカルに持ってくる
+    - imageからコンテナを作る
+    - コンテナに入って作業する
+    - で、コンテナをもとにimageを新たに作る
+    - 新しいimageをdocker hubにｐushすれば他の人が新しいimageでコンテナ作れる
+
+- dockerhubからhello-worldをpullする
+    - docker loginでログイン
+    - docker pull <image>でimageをdocker hubからpull
+    - docker images　でローカルにあるimageのリストを見れる
+    
+    - docker pull hello-worldで「hello-world」のイメージをpullする
+    ```txt
+    Using default tag: latest
+    latest: Pulling from library/hello-world
+    c9c5fd25a1bd: Pull complete
+    Digest: sha256:e0b569a5163a5e6be84e210a2587e7d447e08f87a0e90798363fa44a0464a1e8
+    Status: Downloaded newer image for hello-world:latest
+    docker.io/library/hello-world:latest
+    ```
+
+    - docker imagesコマンドでローカルのimage確認。
+        - TAGはimageのバージョン（バージョン指定しないとlatestがデフォでpullされる）
+        - IMAGE IDはimageのハッシュ値
+        ```txt
+        REPOSITORY               TAG         IMAGE ID       CREATED        SIZE
+        twitter_clone-web        latest      4a57779ba47f   24 hours ago   1.17GB
+        hello-world              latest      f1f77a0f96b7   3 weeks ago    5.2kB
+        ```
+
+    - docker hubで「https://hub.docker.com/u/library?page=1&search=hello」にアクセスすると
+        - library配下のリポジトリ（image）がたくさん出てくる
+        - 1レポジトリに対して1つのimage。
+
+- hello worldのコンテナを動かす
+    - docker run <image>でコンテナを作る
+    - docker psでローカル内のどんなコンテナがあるかを確認できる
+
+    - docker run hello-worldでさっきのimageをコンテナ作成。
+        ```txt
+        -------------------------------------------------------------------------
+        $ docker run hello-world
+
+        Hello from Docker!
+        This message shows that your installation appears to be working correctly.
+
+        To generate this message, Docker took the following steps:
+        1. The Docker client contacted the Docker daemon.
+        2. The Docker daemon pulled the "hello-world" image from the Docker Hub.
+            (arm64v8)
+        3. The Docker daemon created a new container from that image which runs the
+            executable that produces the output you are currently reading.
+        4. The Docker daemon streamed that output to the Docker client, which sent it
+            to your terminal.
+
+        To try something more ambitious, you can run an Ubuntu container with:
+        $ docker run -it ubuntu bash
+
+        Share images, automate workflows, and more with a free Docker ID:
+        https://hub.docker.com/
+
+        For more examples and ideas, visit:
+        https://docs.docker.com/get-started/
+        ```
+
+    - じゃあdocker psでローカルのコンテナ確認〜♪と思ったが出てこない。⇩
+        - docker psはアクティブなコンテナだけ表示するもの。
+            ```txt
+            -------------------------------------------------------------------------
+            $ docker ps
+            CONTAINER ID   IMAGE                    COMMAND                  CREATED        STATUS                  PORTS                                            NAMES
+            428f3870fcc2   twitter_clone-web        "python manage.py ru…"   24 hours ago   Up 24 hours             0.0.0.0:3000->3000/tcp                           twitter_clone-web-1
+            d691342cfea8   schickling/mailcatcher   "sh -c 'mailcatcher …"   24 hours ago   Up 24 hours             0.0.0.0:1025->1025/tcp, 0.0.0.0:1080->1080/tcp   twitter_clone-smtp-1
+            ef85989ffb7d   postgres                 "docker-entrypoint.s…"   24 hours ago   Up 24 hours (healthy)   0.0.0.0:5433->5432/tcp                           twitter_clone-db-1
+            ```
+
+    - なので「docker ps -a」とすればすべてのコンテナが出せる
+        - helloworldコンテナのステータスがExitedになっている
+        - Exitedは「コンテナ作って、プログラムを動かした途端すぐコンテナから抜ける」というイメージ。
+        - さっきはhelloworldコンテナを作った際にテキストを出力するというプログラムがあったので、docker run した時になんか出てた。
+        - その出力プログラムが終わり、すぐコンテナから抜けて、Exitedになっている
+            ```txt
+            docker ps -a
+            CONTAINER ID   IMAGE                    COMMAND                  CREATED         STATUS                      PORTS                                            NAMES
+            eb54ef15c007   hello-world              "/hello"                 3 minutes ago   Exited (0) 3 minutes ago                                                     sleepy_knuth
+            428f3870fcc2   twitter_clone-web        "python manage.py ru…"   24 hours ago    Up 24 hours                 0.0.0.0:3000->3000/tcp                           twitter_clone-web-1
+            d691342cfea8   schickling/mailcatcher   "sh -c 'mailcatcher …"   24 hours ago    Up 24 hours                 0.0.0.0:1025->1025/tcp, 0.0.0.0:1080->1080/tcp   twitter_clone-smtp-1
+            ef85989ffb7d   postgres                 "docker-entrypoint.s…"   24 hours ago    Up 24 hours (healthy)       0.0.0.0:5433->5432/tcp                           twitter_clone-db-1
+            6ad19d2a92aa   django_ec-web            "python manage.py ru…"   8 weeks ago     Created                                                                      django_ec-web-1
+            54b8fcaa4e34   postgres                 "docker-entrypoint.s…"   3 months ago    Exited (128) 2 months ago                                                    django_ec-db-1
+            dfa480d026d5   906700e23423             "python pip install …"   3 months ago    Exited (2) 3 months ago                                                      django_ec-web-run-42c26a16a515
+            f2763c8eac2b   erd                      "erd"                    4 months ago    Exited (0) 4 months ago                                                      xenodochial_austin
+            e16712320f66   erd                      "erd"                    4 months ago    Exited (0) 4 months ago                                                      tender_chebyshev
+            7adc8de79aee   erd                      "erd"                    5 months ago    Exited (0) 5 months ago                                                      competent_burnell
+            06426dce7b6c   erd                      "erd"                    5 months ago    Exited (0) 5 months ago                                                      fervent_hertz
+            84e5d0a947e4   erd                      "erd"                    5 months ago    Exited (0) 5 months ago                                                      gallant_panini
+            b3eaeeb060f4   erd                      "erd"                    5 months ago    Exited (0) 5 months ago                                                      loving_cori
+            397d6b1cffa4   erd                      "erd"                    5 months ago    Exited (0) 5 months ago                                                      laughing_dirac
+            c3b790e440d7   erd                      "erd"                    5 months ago    Exited (0) 5 months ago                                                      funny_chaplygin
+            3bc26f08dcfc   erd                      "erd"                    5 months ago    Exited (0) 5 months ago                                                      hopeful_blackburn
+            425ed87a257a   erd                      "erd"                    5 months ago    Exited (0) 5 months ago                                                      crazy_davinci
+            0cab94d32ac6   mailhog/mailhog:v1.0.1   "MailHog"                6 months ago    Exited (2) 5 months ago                                                      docker-practice-mail
+            0afcc14dc2c7   demo-db                  "docker-entrypoint.s…"   6 months ago    Exited (255) 5 months ago   3306/tcp, 33060/tcp                              docker-practice-db
+            cf4099934d24   demo-app                 "php -S 0.0.0.0:8000…"   6 months ago    Exited (255) 5 months ago   0.0.0.0:18000->8000/tcp                          docker-practice-app
+            f0fa5ef8b143   rails_docker-web         "bundle exec rails s…"   6 months ago    Exited (1) 5 months ago                                                      rails_docker-web-1
+            debe576d86fc   postgres:12              "docker-entrypoint.s…"   6 months ago    Exited (0) 5 months ago                                                      rails_docker-db-1
+            6074e390e50d   postgres                 "docker-entrypoint.s…"   6 months ago    Exited (0) 5 months ago                                                      compose_rails-db-1
+            ```
+        - 例えばテスト環境で常にコンテナがあるわけではない。Aさんがコード修正してテスト環境でテストする際に、A３のコードとdocker imageをテスト環境に送る
+        - すると、テスト環境がimageからコンテナを作って、でコンテナの中にコードを実行するというプログラアムがあるので、それ実行してexitする。みたいな使い方もよくする
+        - run create execute exitというサイクル。
+
+    - 「docker run -it ubuntu bash」でubuntuのdocker imageをrunして、ubuntuのbashする
+        - コンテナの中にUbuntuのOSが入っている状態
+        - コンテナから出る時はexitで出る。
+        - exitで出た場合はk音てなのステータスはExitedになっている
+            ```txt
+            $ docker run -it ubuntu bash
+            root@5b758fe766f1:/# ls
+            bin  boot  dev  etc  home  lib  media  mnt  opt  proc  root  run  sbin  srv  sys  tmp  usr  var
+            root@5b758fe766f1:/# ls usr
+            bin  games  include  lib  libexec  local  sbin  share  src
+            root@5b758fe766f1:/# pwd
+            /
+            root@5b758fe766f1:/# touch test
+            root@5b758fe766f1:/# ls
+            bin  boot  dev  etc  home  lib  media  mnt  opt  proc  root  run  sbin  srv  sys  test  tmp  usr  var
+            root@5b758fe766f1:/# exit
+            exit
+            ```
+
+        - Exitedのステータスのコンテナに対して docker restartすると、Upになる(これでコンテナがリスタートされた)
+            ```txt
+            $ docker ps -a
+            CONTAINER ID   IMAGE                    COMMAND                  CREATED         STATUS                      PORTS                                            NAMES
+            5b758fe766f1   ubuntu                   "bash"                   7 minutes ago   Exited (0) 46 seconds ago                                                    confident_kalam
+            eb54ef15c007   hello-world              "/hello"                 3 hours ago     Exited (0) 3 hours ago                                                       sleepy_knuth
+
+            $ docker restart 5b758fe766f1
+            5b758fe766f1
+            docker ps -a
+            CONTAINER ID   IMAGE                    COMMAND                  CREATED          STATUS                      PORTS                                            NAMES
+            5b758fe766f1   ubuntu                   "bash"                   10 minutes ago   Up 2 seconds                                                                 confident_kalam
+            eb54ef15c007   hello-world              "/hello"                 3 hours ago      Exited (0) 3 hours ago                                                       sleepy_knuth
+            ```
+        ⇩
+        - 再度コンテナに入る（コンテナのbashを開いてコンテナのOSに対して命令ができる状態にする）
+            - docker execをする　(コンテナを指定してコンテナに対して何かプログラムを実行する)
+            - docker exec -it <container> bash (execはコンテナに対してするもの)
+
+            - docker run -it ubuntu bash ←runの方はimageに対してやるやつ。（ubuntuはimage名だね）(image名をしてrunしていた。)
+
+            - -itはbashk移動時に必要なおまじない。
+
+        - exit と detachの違い
+            - exitはコンテナを出るときにコンテナを動かしているプロセスを切って出る
+                - docker exec -it <container> bash後「Exit」で出たらコンテナステータスが「exited」になった。
+                - なのでdocker restartしてUpにして
+                - またdocker exec -it <container> bashでコンテナに入った。
+                - execコマンドはステータスがexitedに対しては実行できない
+
+            - detachはプロセスを残したままコンテナからで流。
+                - detachで出る時は「Ctrl + @ + q」で出るが出た後はコンテナのステータスが「Up」のままになってる。
+                - detachで出たコンテナに再度入る時は「docker attach」で入る
+            - 基本的にはexitkoマンドを時効することが多い
+
+- コンテナをdocker imageにする
+    - docker commit <container> <new image>
+        ```txt
+        $ docker ps -a
+        CONTAINER ID   IMAGE                    COMMAND                  CREATED          STATUS                      PORTS                                            NAMES
+        5b758fe766f1   ubuntu                   "bash"                   31 minutes ago   Up 2 minutes                                                                 confident_kalam
+        eb54ef15c007   hello-world              "/hello"                 4 hours ago      Exited (0) 4 hours ago                                                       sleepy_knuth
+
+        $ docker commit 5b758fe766f1 ubuntu:updated
+        sha256:ba74b561d3eee9a2649eb48b64e2267b430843a06b60b5054be178b130a247f2
+        $ docker images
+        REPOSITORY               TAG         IMAGE ID       CREATED         SIZE
+        ubuntu                   updated     ba74b561d3ee   7 seconds ago   101MB
+        ubuntu                   latest      ffb64c9b7e8b   8 months ago    101MB
+        ```
