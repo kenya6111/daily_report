@@ -806,3 +806,130 @@ public class FunRestController {
 
 - Bean Lifecycle Methods
     - Spring Beanが生成されてから破棄されるまでの過程を指します
+    - Beanのインスタンス化､ 依存関係の注入､ Spring内部の処理が行われ､
+        その後､ 独自にカスタマイズした初期化メソッドを実行することができます｡
+        そして､ その時点で､ 豆が使えるようになるのです｡
+        そして､ コンテナがシャットダウンまたは停止されると､ 実際にカスタムのdestroyメソッドを呼び出すことになります｡
+
+    - Beanの初期化時に独自のカスタムコードを追加することができます｡
+
+    - @PostConstruct
+        - Beanが初期化された直後に実行されるメソッドを定義するためのアノテーション」のことです。たとえば、Springアプリケーションが起動したときに「何か特別な処理を一度だけ行いたい！」という場面がありますよね。その場合に@PostConstructを使うと便利です。
+        - 初期化処理を行うメソッドに付けるアノテーション
+    - @PreDestroy
+        - 終了処理を行うメソッドに付けるアノテーション
+
+    - CricketCoahクラスを以下のようにした。
+        ```java
+        package com.luv2code.springcoredemo.common;
+        import jakarta.annotation.PostConstruct;
+        import jakarta.annotation.PreDestroy;
+        import org.springframework.beans.factory.config.ConfigurableBeanFactory;
+        import org.springframework.context.annotation.Primary;
+        import org.springframework.context.annotation.Scope;
+        import org.springframework.stereotype.Component;
+
+        @Component
+        public class CricketCoach implements Coach{
+            public CricketCoach(){
+                System.out.println("In constructor :" + getClass().getSimpleName());
+            }
+
+            @PostConstruct
+            public  void domyStartUpStuf(){
+                System.out.println("In doMyStartUpStuff(): "+ getClass().getSimpleName());
+            }
+
+            @PreDestroy
+            public void doMyCleanUpStuff(){
+                System.out.println("In doMyCleanUpStuff(): " + getClass().getSimpleName());
+            }
+
+            @Override
+            public String getDailyWorkout() {
+                return "practice fast bowling  for 1256 minutes!!!!!!!!!!";
+            }
+        }
+
+        ```
+
+        - アプリ起動時にはすべてのBeanが初期化され、
+        ```txt
+        2025-02-17T21:14:41.613+09:00  INFO 72210 --- [springcoredemo] [  restartedMain] w.s.c.ServletWebServerApplicationContext : Root WebApplicationContext: initialization completed in 353 ms
+        In constructor :BasebollCoach
+        In constructor :CricketCoach
+        In doMyStartUpStuff(): CricketCoach ←　ここ！！　Bean初期化時に呼ばれている
+        In constructor :TennisCoach
+        In constructor :TrackCoach
+        In constructor :DemoController
+        ```
+
+        - 逆にアプリを落とした時は@PreDestroyのメソッドが呼ばれているのがわかる
+        ```txt
+        2025-02-17T21:14:41.730+09:00  INFO 72210 --- [springcoredemo] [  restartedMain] o.s.b.d.a.OptionalLiveReloadServer       : LiveReload server is running on port 35729
+        2025-02-17T21:14:41.738+09:00  INFO 72210 --- [springcoredemo] [  restartedMain] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat started on port 8080 (http) with context path '/'
+        2025-02-17T21:14:41.742+09:00  INFO 72210 --- [springcoredemo] [  restartedMain] c.l.s.SpringcoredemoApplication          : Started SpringcoredemoApplication in 0.693 seconds (process running for 0.9)
+        2025-02-17T21:18:05.455+09:00  INFO 72210 --- [springcoredemo] [ionShutdownHook] o.s.b.w.e.tomcat.GracefulShutdown        : Commencing graceful shutdown. Waiting for active requests to complete
+        2025-02-17T21:18:05.460+09:00  INFO 72210 --- [springcoredemo] [tomcat-shutdown] o.s.b.w.e.tomcat.GracefulShutdown        : Graceful shutdown complete
+        In doMyCleanUpStuff(): CricketCoach　　←ここ！！！
+
+        Process finished with exit code 130 (interrupted by signal 2:SIGINT)
+        ```
+- java Config Bean
+    - @Componentや@Autowiredを使わずにBeanを生成、管理する方法
+    - Spring では通常、@Component や @Service などのアノテーションを使って Bean を自動登録するけど@Configuration + @Bean を使うことで、手動で Bean を定義することもできる。
+    - この場合、Spring は swimCoach() を実行し、その戻り値（SwimCoach のインスタンス）を Spring コンテナ内の Bean として登録 する。
+    ```java
+    @Configuration
+    public class AppConfig {
+
+        @Bean
+        public Coach swimCoach() {
+            return new SwimCoach();
+        }
+    }
+    ```
+
+    - 1️⃣ @Configuration クラスで Bean を登録
+        まずは DIコンテナ（Spring コンテナ）に Coach の Bean を登録 する。
+        ```java
+        @Configuration
+        public class SportConfig {
+
+            @Bean
+            public Coach swimCoach() {
+                return new SwimCoach();
+            }
+
+            @Bean
+            public Coach baseballCoach() {
+                return new BaseballCoach();
+            }
+        }
+        ```
+    
+    - 2️⃣ Controller で Bean を Inject
+        次に、別の場所（Controller）で @Autowired を使って Inject する。
+        ```java
+        @RestController
+        public class DemoController {
+            private final Coach myCoach;
+
+            @Autowired
+            public DemoController(@Qualifier("swimCoach") Coach theCoach) {
+                this.myCoach = theCoach;
+            }
+
+            @GetMapping("/dailyworkout")
+            public String getDailyWorkout() {
+                return myCoach.getDailyWorkout();
+            }
+        }
+        ```
+        - 💡 @Configuration クラスで @Bean を定義し、DIコンテナに登録する
+        - 💡 別のクラス（Controller など）で @Autowired して Inject する
+        - 💡 @Qualifier("beanName") で特定の @Bean を指定できる
+
+        - つまり 「設定クラスで Bean を作って、Controller で Inject して使う」 という流れで 合ってる！ 🚀
+
+## 3章（Hibernate/JPA CRUD）
