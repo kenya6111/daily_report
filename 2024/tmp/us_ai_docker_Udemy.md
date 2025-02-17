@@ -251,3 +251,42 @@
         ubuntu                   updated     ba74b561d3ee   7 seconds ago   101MB
         ubuntu                   latest      ffb64c9b7e8b   8 months ago    101MB
         ```
+- さっきので新しくなったコンテナをいmageにしたので、docker hubにプッシュして他の人も更新されたイメージを使えるようにする
+- dockerhubではリポジトリがいろいろあって、その中でimageを管理している。
+    - 今までイメージ名と表示されていたのは「Repository名: TAG名」だった。
+    - ubuntuなら「library/ubuntu:latest」って感じで。（library/ubuntuがリポジトリ名で、latestがTAG名）
+    - 単にREPOSITORY名だけ尾をイメージ名とする場合もある
+    - リポジトリ名はハイフンで繋げるのが一般的
+- なのでまずdocker hubにリポジトリを作成する
+    - 今回は「my-test-repo」という名前でリポジトリを作成
+    - イメージをプッシュするにあたって「image名をリポジトリ名」に合わせる必要がある
+        - 理由は,dockerは1つのイメージに対して1つのリポジトリが対応するってのは前回話した通り。
+        - で、dockerはimageをpushするときにプッシュ先を探しにいく必要があるよね、
+        - そのプッシュ先を探すときにdockerは基本的にimageの名前を見て、どこのリポジトリにプッシュすればいいか探す
+        - そのイメージ名の変更に使うのが次のコマンド
+            - 「docker tag <source> <target>」
+            - <source>が変更したいiamgeの「repository名:タグ名」
+            - <target>が修正後の名前。新たに作ったリポジトリ名に合わせる。「user名:新たに作ったリポジトリ名」
+            - 右記のコマンドになる。docker tag ubuntu:updated kenya6111/my-test-repo
+            - すると以下のように同じイメージに別のタグ名のものができた。（イメージIDが同じなので新たにイメージが作られたわけではない。同じイメージに複数のタグがついているような状態。）
+            ```txt
+            $ docker tag ubuntu:updated kenya6111/my-test-repo
+            $ docker images
+            REPOSITORY               TAG         IMAGE ID       CREATED        SIZE
+            kenya6111/my-test-repo   latest      ba74b561d3ee   24 hours ago   101MB
+            ubuntu                   updated     ba74b561d3ee   24 hours ago   101MB
+            ```
+
+- DockerHubにdocker imageをpushする
+    - docker push <さっき作ったimageのリポジトリ名>
+    - docker push kenya6111/my-test-repoとなる
+
+- docker のimageを削除する
+    - docker rmi <image>
+
+- docker hub のimageをｐullする
+    - docker pull <さっきpushしたリポジトリの名前>
+    - docker pull kenya6111/my-test-repo:latest となる
+
+
+## 5章
