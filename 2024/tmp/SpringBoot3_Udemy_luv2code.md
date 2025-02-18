@@ -933,3 +933,166 @@ public class FunRestController {
         - つまり 「設定クラスで Bean を作って、Controller で Inject して使う」 という流れで 合ってる！ 🚀
 
 ## 3章（Hibernate/JPA CRUD）
+- Hiberante
+    - JavaオブジェクトをDBに永続化または保存するためのフレームワーク
+    - Java でデータベース操作を簡単にするための ORM（オブジェクト・リレーショナル・マッピング）フレームワーク。
+    - 🔹 通常の JDBC（SQL を直接書く）(SQL を直接書く必要がある（面倒 & ミスしやすい）)
+        ```java
+        Connection conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/mydb", "user", "pass");
+        PreparedStatement stmt = conn.prepareStatement("SELECT * FROM users WHERE id = ?");
+        stmt.setInt(1, userId);
+        ResultSet rs = stmt.executeQuery();
+        ```
+   - 🛠 Spring + Hibernate（Spring Data JPA）の基本構成
+        - 1️⃣ Entity クラスを作る（データベースのテーブルに対応するクラス）
+        ```java
+        @Entity
+        @Table(name="users")
+        public class User {
+            @Id
+            @GeneratedValue(strategy = GenerationType.IDENTITY)
+            private Long id;
+
+            private String name;
+
+            // Getter & Setter
+        }
+        ```
+        - 2️⃣ Repository インターフェースを作る
+        ```java
+            @Repository
+            public interface UserRepository extends JpaRepository<User, Long> {
+            }
+            👆 この UserRepository を使えば、SQL を書かなくてもデータベース操作ができる！
+        ```
+
+        - 3️⃣ Service で UserRepository を使う
+        ```java
+            @Service
+            public class UserService {
+                @Autowired
+                private UserRepository userRepository;
+
+                public User getUserById(Long id) {
+                    return userRepository.findById(id).orElse(null);
+                }
+            }
+        ```
+        - 4️⃣ Controller でデータ取得
+        ```java
+            @RestController
+            @RequestMapping("/users")
+            public class UserController {
+                @Autowired
+                private UserService userService;
+
+                @GetMapping("/{id}")
+                public User getUser(@PathVariable Long id) {
+                    return userService.getUserById(id);
+                }
+            }
+        ```
+        - ✅ これで /users/1 にアクセスすると、ID=1 のユーザー情報が JSON で取得できる！
+
+    - 1️⃣ JPA（Java Persistence API）の由来
+        - Java Persistence API（Java の永続化 API） の略
+        - 「Persistence（永続化）」= データを長期間保存する仕組み（＝データベースに保存すること）
+        - Java で オブジェクトをデータベースに保存・管理するための標準仕様 として設計された
+        - 👉 JPA は「Java のデータ永続化のための API」って意味！
+    
+    - 2️⃣ Hibernate の由来
+        - Hibernate（ハイバネート）は、英語で 「冬眠」や「休眠」 の意味
+        - Hibernate は データベースとオブジェクトの間で、不要なデータのロードを避けてリソースを節約する仕組み を持っている
+        - 「データを必要なときだけ呼び出す（休眠してるデータを必要なときに目覚めさせる）」 という考えから、この名前が付いた
+        - 👉 Hibernate は「不要なデータを Hibernate（冬眠）させて、パフォーマンスを最適化する ORM」！
+    
+    - 📌 ORM（Object-Relational Mapping）とは？
+        - 1️⃣ ORM の定義
+        - ORM（オブジェクト・リレーショナル・マッピング） は、
+        - 「データベースのテーブル」と「Java のオブジェクト」を対応させて、SQL を直接書かずにデータを操作できる仕組み」 のこと。
+
+    - 2️⃣ ORM がない場合（JDBC で SQL を直接書く）
+        ```java
+        Connection conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/mydb", "user", "pass");
+        PreparedStatement stmt = conn.prepareStatement("SELECT * FROM users WHERE id = ?");
+        stmt.setInt(1, userId);
+        ResultSet rs = stmt.executeQuery();
+        ```
+        👆 SQL を直書きしないとデータを取得できない！（めんどい & バグの原因になりやすい）
+
+    - 3️⃣ ORM を使うと…（JPA / Hibernate の場合）
+        ```java
+            @Entity
+            @Table(name="users")
+            public class User {
+                @Id
+                @GeneratedValue(strategy = GenerationType.IDENTITY)
+                private Long id;
+                private String name;
+            }
+        ```
+        ```java
+            @Autowired
+            private UserRepository userRepository;
+            User user = userRepository.findById(1L).orElse(null);
+        ```
+        👆 SQL を書かずに、オブジェクトのメソッドだけでデータを取得できる！
+    - ✅ ORM を使うと SQL を書かずにデータを扱える！
+    - ✅ JPA は ORM の標準仕様で、Hibernate はその実装の1つ！ 
+        - JPAはただのインタフェースで、その実装としてHibernateが最もポピュラー
+
+    - 開発者としてはJavaクラスやオブジェクトとデータベースのデータとの対応づけをHibernateに伝えるだけで良い
+        - 実際にはjavaクラスを所定のデータベーステーブルにマッピングすることになる
+    ![alt text](../../image/image11.png)
+
+    - でも結局Hibernate/JPAは、実はすべてのデータベース通信にバックグラウンドでJDBCを使っている
+        - つまりhibernate/jpaはJDBCの上にある抽象化の別レイヤーにすぎない
+
+- MysqlWorkBench
+    - MySQLにアクセスするためのGUIであることを忘れないでください。
+
+- EntityManager
+    - EntityManager は、JPA（Java Persistence API）(仕様)を使ってデータベースとやり取りするためのオブジェクト
+        - クエリの作成などに使うメインコンポーネント。entity manager is from JPA
+
+    - EntityManager を使った基本操作
+        - 1️⃣ EntityManager の取得
+            - 通常、Spring Boot では JpaRepository を使うことが多いが、
+            - EntityManager を使えば、もっと細かい制御が可能になる。
+            ```java
+                @PersistenceContext
+                private EntityManager entityManager;
+            ```
+            - 👆 @PersistenceContext を使うと、Spring が EntityManager を自動で Inject してくれる。
+        - 2️⃣ エンティティを保存（persist()）
+            - データベースに新しいエンティティを保存するには persist() を使う。
+            ```java
+                User user = new User();
+                user.setName("John Doe");
+                entityManager.persist(user);
+            ```
+            - 👆 データベースに user を登録！（INSERT 相当）
+
+        - 3️⃣ エンティティを取得（find()）
+            - ID を指定してデータを取得する場合。
+            ```java
+                User user = entityManager.find(User.class, 1L);
+            ```
+            - 👆 ID が 1 の User を取得！（SELECT 相当）
+
+        - 4️⃣ エンティティを更新（merge()）
+            - データを更新するときは merge() を使う。
+            ```java
+                User user = entityManager.find(User.class, 1L);
+                user.setName("Jane Doe");
+                entityManager.merge(user);
+            ```
+            - 👆 ID=1 のユーザー名を Jane Doe に変更！（UPDATE 相当）
+
+        - 5️⃣ エンティティを削除（remove()）
+            - データを削除するときは remove() を使う。
+            ```java
+                User user = entityManager.find(User.class, 1L);
+                entityManager.remove(user);
+            ```
+            👆 ID=1 の User を削除！（DELETE 相当）
