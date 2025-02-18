@@ -406,4 +406,59 @@
     - docker system prune（コンテナ全削除）
 
 
-##
+## 6章
+-Dockerfile
+    - docker iiamgeクォどういうイメージでってテキスト書いてあるのもの。
+    - docker imageの設計図
+    - 今までdocker hubからdocker imageを撮ってきてたが、実務ではDockerfileからdocker imageを作ることが多い
+    - Dockerfileを自由にかける＝＝dockeｒを自由に使いこなせる
+    - DockerfileがDockerの真骨頂
+- FROM, RUN, ADD ←docker インストラクションという。
+
+- FROM
+    - 元となるベースのイメージ
+- RUN
+    - dockerfileからdockerimage作る時に実行するコマンド
+
+- docker build コマンド
+    - Dockerfileからdockerimageを作成するコマンド
+    - 単にdocker build ~とするとNoneという名前のイメージができてしまいわかりにくい
+        - そういう時は dokcer build -t <name> <directory>で名前をつけてimageを作れる
+
+    - Dockerfileのあるディレクトリでdocker buildするルール
+    ```Dockerfile
+        FROM ubuntu:latest
+        RUN touch test
+    ```
+
+    - docker build -t unkoimage .
+        ```txt
+        docker build -t unkoimage .
+
+        [+] Building 0.1s (6/6) FINISHED                                                                                                                                                            docker:desktop-linux
+        => [internal] load build definition from Dockerfile                                                                                                                                                        0.0s
+        => => transferring dockerfile: 107B                                                                                                                                                                        0.0s
+        => [internal] load metadata for docker.io/library/ubuntu:latest                                                                                                                                            0.0s
+        => [internal] load .dockerignore                                                                                                                                                                           0.0s
+        => => transferring context: 2B                                                                                                                                                                             0.0s
+        => [1/2] FROM docker.io/library/ubuntu:latest                                                                                                                                                              0.0s
+        => CACHED [2/2] RUN touch test                                                                                                                                                                             0.0s
+        => exporting to image                                                                                                                                                                                      0.0s
+        => => exporting layers                                                                                                                                                                                     0.0s
+        => => writing image sha256:794f122846d1a6d130cd5c74cb9c5d582badba32e31cc635038a655730bfab94                                                                                                                0.0s
+        => => naming to docker.io/library/unkoimage                                                                                                                                                                0.0s
+
+        View build details: docker-desktop://dashboard/build/desktop-linux/desktop-linux/soi74mrf3uqcw2n013sq0n1sm
+
+        What's next:
+            View a summary of image vulnerabilities and recommendations → docker scout quickview
+        ```
+
+    - 作ったunkoimageをdocker runしてコンテナかする
+    ```txt
+    $ docker run -it unkoimage bash
+    root@488c13b3db6b:/# ls
+    bin  boot  dev  etc  home  lib  media  mnt  opt  proc  root  run  sbin  srv  sys  test  tmp  usr  var
+    root@488c13b3db6b:/#
+    ```
+    - ちゃんとtestファイルがあるので,Dockerfileの RUN touch testが実行されたのがわかる
