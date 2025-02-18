@@ -462,3 +462,89 @@
     root@488c13b3db6b:/#
     ```
     - ちゃんとtestファイルがあるので,Dockerfileの RUN touch testが実行されたのがわかる
+
+## 7章
+- FORM
+    - ベースとなるイメージを決定
+    - DockerfileはFROMから書き始める
+    - ほとんどの場合はOSを指定
+    - さっきのRUN touch testも、「FROM ubuntu 」でインストールしたOSの土台があってできること。
+
+- RUN
+    - Linuxkおマンドを実行
+    - RUNを使うことで好きなようにカスタマイズできる
+    - RUN毎にLayerが作られる
+    ```Dockerfile
+    FROM ubuntu:latest
+    RUN touch test
+    RUN echo 'hello world' > test
+    RUN やりたいこと
+    RUN やりたいこと
+    RUN やりたいこと
+    ```
+
+    - ↑こんな感じでやりたいことを書いていく。
+
+- Layer数を最小限にするために
+    - docker imageのLayer数は最小限にする！
+    - Layer数が多くなる＝＝dokcerの容量が大きくなる
+    - Layerを作るのはRUN, COPY , ADDなどの3つ
+    - コマンドを&&で繋げる
+    - バックスラッシュで改行する
+    - 大体のアプリではtouchファイルなんかじゃなくてパッケージやライブラリをインストールするもん
+    - apt-get update →新しいパッケージリストを取得
+    - apt-get install <packege>で <package>をインスTpーる
+
+    - 基本、コマンドは&&で繋げる
+    ```txt
+    $ ls
+    Dockerfile
+    $ touch test.txt && touch test2.txt && echo "テストだよー"
+    テストだよー
+    $ ls
+    Dockerfile	test.txt	test2.txt
+    ```
+
+    - あとパッケージのインストールも apt get install aaa bbb ccc.....って感じで複数インストールするようにって感じで書けば🙆
+    - 後バックスラッシュを使って改行するのが一般的（改行することで、インストールしたパッケージのリストが見やすい！）(上からアルファベット順に並べてパッケージ追加の際はアルファベット順で挿入してくと、管理しやすい)
+    ```Dockerfile
+     FROM ubuntu:latest
+        RUN touch test
+        RUN apt-get update && apt-get install \
+        xxx \
+        yyy \
+        zzz
+    ```
+    - こういう感じで１行にまとめることでLayerが少なくなってdokcer imageの容量が軽くなる
+
+
+- cache
+    - 実際のDockerfileのコーディングでは、すべてのパッケージが把握できているわけではないので、随時Dockerfileを更新してイメージ作ってビルドしてを繰り返すもの。
+    - その時に毎度毎度 apt-get updateとかやるのは時間かかる
+    - てか毎回packegeをインストールしな追うのはマジで時間かかる
+    - キャッシュはdocker のLayer毎に保存されているので、RUNの１行１行キャッシュに保存されていく！！！
+    ```Dockerfile
+     FROM ubuntu:latest
+        RUN touch test
+        RUN apt-get update 
+        RUN apt-get install \
+        xxx \
+        yyy \
+        zzz
+    ```
+
+    - 上記のDockerfileだと、RUN毎にLayer作られる原則より、apt-get updateのレイヤーと、apt-get installのレイヤーが作られる
+    - RUN apt-get installの更新した時、再度dokcer buildする際は、RUN apt-get updateのレイヤーは更新がないのでキャッシュにより過去のデータを使ってくれる
+    - なので上記のDocker fileで一旦良さそうで、また追加でパッケージを追加しますって時は以下の感じで新たにRUNで書けば、それ以前のRUNはキャッシュを使ってくれるので早く起動できる
+    ```dockerfile
+        FROM ubuntu:latest
+        RUN touch test
+        RUN apt-get update 
+        RUN apt-get install \
+        xxx \
+        yyy \
+        zzz
+        RUN apt-get install fff
+    ```
+    - 👆こうすることで、毎回パッケージを追加する毎にゼロからビルドする必要がなくなる
+    
