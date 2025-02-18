@@ -290,3 +290,120 @@
 
 
 ## 5章
+- docker runは何をしているか
+    - docker imageからコンテナにするコマンドだたね。
+        - run後にローカルにイメージないか探して、なかったらdocker hubからイメージとってくるってやつだ多Tね。
+    - 実際runは何をしているかというと、 「run = create + start」をしている
+
+    - docker run hello-worldをやると以下のように文字が出力される
+    - docker startはどのコンテナにもあるデフォルトのコマンドを実行してくれるってだけのやつ
+    - hello-worldでは、デフォルトコマンドはテキスト出力なので、runすると以下のようにテキストが出てくる。
+    - 何度もかくがdocker startはコンテナのデフォルトコマンドを実行するだけ。
+    - なのでrun してもコンテナはExitedのまま
+    ```txt
+    docker run hello-world
+
+    Hello from Docker!
+    This message shows that your installation appears to be working correctly.
+
+    To generate this message, Docker took the following steps:
+    1. The Docker client contacted the Docker daemon.
+    2. The Docker daemon pulled the "hello-world" image from the Docker Hub.
+        (arm64v8)
+    3. The Docker daemon created a new container from that image which runs the
+        executable that produces the output you are currently reading.
+    4. The Docker daemon streamed that output to the Docker client, which sent it
+        to your terminal.
+
+    To try something more ambitious, you can run an Ubuntu container with:
+    $ docker run -it ubuntu bash
+
+    Share images, automate workflows, and more with a free Docker ID:
+    https://hub.docker.com/
+
+    For more examples and ideas, visit:
+    https://docs.docker.com/get-started/
+    ```
+
+    - run = create startのcreateはコンテナを作るだけ。
+        - docker create hello-world
+        - createはこんんてなが作られるだけでコンテナのデフォルトコマンドは実行されない。
+        - docker create後はコンテナのステータスは「created」
+        ```txt
+        $ docker ps -a
+        CONTAINER ID   IMAGE                    COMMAND                  CREATED          STATUS                      PORTS                                            NAMES
+        7d3246f2af2e   hello-world              "/hello"                 2 minutes ago    Exited (0) 2 minutes ago                                                     adoring_herschel
+        7dc7f2eaca69   kenya6111/my-test-repo   "bash"                   17 minutes ago   Exited (0) 17 minutes ago                                                    hopeful_bouman
+        5b758fe766f1   ubuntu                   "bash"                   42 hours ago     Up 42 hours                                                                  confident_kalam
+
+        $ docker create hello-world
+        e6db0ee54ac9fd7acb2438f1bf30d289440d4ce37807ef0cd06a1e91c721beec
+
+        $ docker ps -a
+        CONTAINER ID   IMAGE                    COMMAND                  CREATED          STATUS                      PORTS                                            NAMES
+        e6db0ee54ac9   hello-world              "/hello"                 2 seconds ago    Created                                                                      recursing_hofstadter
+        7d3246f2af2e   hello-world              "/hello"                 4 minutes ago    Exited (0) 4 minutes ago                                                     adoring_herschel
+        7dc7f2eaca69   kenya6111/my-test-repo   "bash"                   19 minutes ago   Exited (0) 19 minutes ago                                                    hopeful_bouman
+        5b758fe766f1   ubuntu                   "bash"                   42 hours ago     Up 42 hours                                                                  confident_kalam
+        ```
+    
+    - docker start <コンテナID>でコンテナスタートできる
+        - docker start 
+        - docker start すると、コンテナのデフォルトコマンド実行された後にする様Exitedになる
+        - ただ、普通にdocker startしただけでは、デフォルトコマンドの出力が見えない。
+        - dokcer start -a e6db0ee54ac9とすると、テキスト出力される
+
+- コマンドの上書き
+    - 普通にdocker run <image>すると、コンテナのデフォルトのコマンドが実行される
+    - それを、docker run <image><command>で、デフォルトコマンドではなく、指定したコマンドが実行される・
+
+    - docker psした時に、COMMAND列の値が、デフォルトコマンドとなる。　
+    ```txt
+    docker ps
+    CONTAINER ID   IMAGE                    COMMAND                  CREATED      STATUS                PORTS                                            NAMES
+    5b758fe766f1   ubuntu                   "bash"                   2 days ago   Up 2 days                                                              confident_kalam
+    428f3870fcc2   twitter_clone-web        "python manage.py ru…"   4 days ago   Up 4 days             0.0.0.0:3000->3000/tcp                           twitter_clone-web-1
+    d691342cfea8   schickling/mailcatcher   "sh -c 'mailcatcher …"   4 days ago   Up 4 days             0.0.0.0:1025->1025/tcp, 0.0.0.0:1080->1080/tcp   twitter_clone-smtp-1
+    ef85989ffb7d   postgres                 "docker-entrypoint.s…"   4 days ago   Up 4 days (healthy)   0.0.0.0:5433->5432/tcp                           twitter_clone-db-1
+    ```
+
+    - なので、docker run ubuntu としても実際はbashが起動されていた！でもすぐExitしているのでdocker run ubuntu しても、何もコマンドラインには出ないように見える
+    ```txt
+    $ docker run ubuntu
+    $ docker run ubuntu ls
+    bin
+    boot
+    dev
+    etc
+    home
+    lib
+    media
+    mnt
+    opt
+    proc
+    root
+    run
+    sbin
+    srv
+    sys
+    tmp
+    usr
+    var
+
+    $ docker run ubuntu pwd
+    /
+    ```
+    - docker run ubuntu pwdとかすると、pwdkコマンドで、デフォルトコマンドを上書きしている！！
+    - docker run imageでデフォルトのコマンドが実行される。
+    - デフォルトコマンドは上掛ける！！重要
+
+-  -itとはなんなのか
+    - 「-i」＝インプット可能（ホストからコンテナへのチャネルを開く）
+    - 「-t」＝表示が綺麗になる
+- コンテナの削除
+    - docker stop <container> （コンテナをとめる）
+    - docker rm <container> (コンテナの削除)　（docker ps の一覧から消すイメージ）
+    - docker system prune（コンテナ全削除）
+
+
+##
