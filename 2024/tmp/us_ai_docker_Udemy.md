@@ -547,4 +547,45 @@
         RUN apt-get install fff
     ```
     - 👆こうすることで、毎回パッケージを追加する毎にゼロからビルドする必要がなくなる
-    
+
+- CMD
+    - コンテナのデフォルトコマンドを指定
+    - CMD["executable","param1","param2"]
+    - 原則Dockerfileの最後に記述
+    - CMD["/bin/bash"]
+
+    ```Dockerfile
+    FROM ubuntu:latest
+    RUN apt-get update && apt-get install -y \
+        curl \
+        cvs \
+        nginx
+    CMD ["ls"]
+    ```
+
+    - 上記のドッカーファイルの場合、docker run すると以下の出力となる。(CMDに書いたコマンドがデフォルトコマンドとなってrunした時に実行されているのがわかる)
+    ```txt
+    $ docker run 5cb550e0a666
+    bin
+    bin.usr-is-merged
+    boot
+    dev
+    etc
+    home
+    lib
+    media
+    mnt
+    opt
+    proc
+    root
+    run
+    sbin
+    sbin.usr-is-merged
+    srv
+    sys
+    tmp
+    usr
+    var
+    ```
+
+- RUNはLayerを作る。CMDはLayerを作らない。
