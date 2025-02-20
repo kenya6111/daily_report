@@ -589,3 +589,120 @@
     ```
 
 - RUNはLayerを作る。CMDはLayerを作らない。
+
+## 8章
+- なぜDockerfileのあるディレクトとりでdocker build(Dockerfileからdockerimageを作成するコマンド)をしていたか。
+    - それは、Docker buildするときに指定したフォルダを、docker deamonに渡す。
+    - で、どっかーデーモンが、そのフォルダとDockerfileをもとに、docker imageを作っている
+    - ここでいうフォルダのことをビルドコンテキストという
+
+    - ビルドする→ボルドコンテキストがどっかーデーモンに渡される
+    - なんでビルドコンテキストわたしてるかというと、ビルドコンテキストの中にあるファイルをビルド時に使うことができるから
+
+- Docker daemonとは
+    ![alt text](../../image/image11.png)
+    - このDOCKERのアプリっていうのは、こういう構成をしていますで、Clientと呼ばれるものがあって、これはDOCKERのCLI。クライアントのCLIですねで。
+    - ここの部分が今まで僕らがこうDOCKERビルドとかDOCKERプルとかRUNというコマンドを打っていた先のアプリなんですね。
+    - つまり、僕らはDOCKERを使うときに、このクライアントのアプリケーションを使ってDOCKERを操作していました。で、それはDOCKERCLIっていうツールなんですけど、それを使ってたんですね。
+    - えじゃ実際にこのコンテナとかイメージをこう操作していくのは誰がやってたかっていうと、DOCKERデーモンって言われるものがやってた
+    - 僕らはこのクライアントのツールCLIを使ってDOCKERデーモンに命令を出してたんですよで、このDOCKERで文があるところ
+    - であともう一つレジストリーって言ってたのが、このDOCKERHUBとかのレジストリーですよねで、これについては最初のセクションでやりました。
+    -なのでこのクライアント側僕らがDOCKERビルドだとかっていうコマンドを打つ側と、DOCKERホスト（実際にDOCKERのコンテナとかイメージを操作する。デーモンがいるところ）と、DOCKERHUB（実際にイメージをこうストレージしていくところ）、この3つに分かれてるっていうようなイメージです。
+    - なので僕らは、このDOCKERのCLIのコマンドを使って、どっかで盛んに命令を出していたんだとで、そのDOCKERデーモンは命令を元に、このDOCKERのオブジェクトを管理していたと、そういうイメージで言っていただければいいかなと思います。
+
+- build contextとは
+    - このDOCKERビルドのコマンドを使うときに、Docerfileが置いてあるフォルダを指定してDOCKERイメージをビルドしていました。
+    - で、この指定したフォルダのことをビルドコンテキストと呼ぶということを最初に話したと思います。
+    - このビルドコンテキストって何なのかっていうと、ビルドはビルドですよねで、このコンテキストって何かっていうと、普通コンテキストっていうと文脈とかっていう意味のイメージが強いと思うんですけど、このDOCKERのビルドコンテキストはどっちかというと、こう状況とか環境っていう意味で使います。なのでこれはビルドをするときの環境ですね。
+    - こういう状況でdockerデーモンはビルドしますよって意味になる
+
+- COPY
+    - ビルドコンテキストの中にある何かこうファイルをビルドするときにDOCKERイメージに組み込むことができる。このCOPYというDOCKERインストラクションについて解説をしたいと思います。
+    - COPYのどっかーインストラクションを使うことによって、ビルドコンテキスト内のDockerfile以外のファイルをdockerimagenに組み込んでコンテナで使うことができる
+    - 基本的にはこのコンテナのファイルシステムっていうのは、このホストのファイルシステムとはまったく別のものになるので、このコピーを使うことで、このファイルの受け渡しをホストからコンテナにすることができます
+    - COPY <src><dest>
+        - srcがコンテナに持っていきたいファイルのパス(ヴビルドコンテキストからのパス)
+        - dest が目的のファイルを置く場所パス
+
+        - ikano Copyインストラクションはsomthingというファイルを /new/dirというディレクトリに送るという意味
+        ```Dockerfile
+        FROM ubuntu:latest
+        RUN mkdir /new_dir
+        COPY something /new_dir/
+        ```
+
+
+        ```txt
+        $ docker build -t unkoimage4 .
+
+        [+] Building 0.2s (8/8) FINISHED                                                                                                                              docker:desktop-linux
+        => [internal] load build definition from Dockerfile                                                                                                                          0.0s
+        => => transferring dockerfile: 136B                                                                                                                                          0.0s
+        => [internal] load metadata for docker.io/library/ubuntu:latest                                                                                                              0.0s
+        => [internal] load .dockerignore                                                                                                                                             0.0s
+        => => transferring context: 2B                                                                                                                                               0.0s
+        => CACHED [1/3] FROM docker.io/library/ubuntu:latest                                                                                                                         0.0s
+        => [internal] load build context                                                                                                                                             0.0s
+        => => transferring context: 67B                                                                                                                                              0.0s
+        => [2/3] RUN mkdir /new_dir                                                                                                                                                  0.1s
+        => [3/3] COPY something /new_dir/                                                                                                                                            0.0s
+        => exporting to image                                                                                                                                                        0.0s
+        => => exporting layers                                                                                                                                                       0.0s
+        => => writing image sha256:d26344a8d514d06a6eaee52542f7c77acb424fec3c4d5ab93f58090c3ded78a8                                                                                  0.0s
+        => => naming to docker.io/library/unkoimage4                                                                                                                                 0.0s
+
+        View build details: docker-desktop://dashboard/build/desktop-linux/desktop-linux/4cc8btdrddws88lhd7k3j6qtv
+
+        What's next:
+            View a summary of image vulnerabilities and recommendations → docker scout quickview
+        $ docker run -it unkoimage4 bash
+        root@5b51528ab8d3:/# ls
+        bin  boot  dev  etc  home  lib  media  mnt  new_dir  opt  proc  root  run  sbin  srv  sys  tmp  usr  var
+        root@5b51528ab8d3:/# ls new_dir
+        something
+        root@5b51528ab8d3:/#
+        ```
+
+- ADD
+    - 単純にこのファイルとかフォルダっていうのをコピーしたいのであれば、このコピーっていうのを使ってください。
+    - こうADDっていうのは、コピーよりも機能が多いんですよね。機能が多い分、結構わかりにくいんですよ。
+    - じゃあ、どういうときにじゃADDを使うのかっていうと、おそらく99%は「tar」の圧縮ファイルをコピーして解凍したいときはADDを使います
+    - このDOCKERのビルドコンテキストのフォルダに前回このSOMETHINGっていう何かファイルを作ってコピーをして持ってたんですけどじゃ。
+    - 仮にこのファイルが何かすごく大きかったり、フォルダ階層になっていて、何かこうサイズが大きいものだった場合、このファイルを圧縮して持てきたいっていうケースが結構あるんですね.この時に使う
+
+- ENTORYPOINT
+    - エントリーポイントもこのデフォルトのコマンドを指定することができる
+    - CMDでのデフォルトコマンド指定は上書きできる。ENTORYPOINTはできない。
+    - docker run時にデフォルトコマンド上書きできるのはCMDの方
+    - 同じdockerfile内で、ENTORYPOINTがあルバあいは、CMDはその ENTORYPOINTで指定したデフォルココマンドの引数を書
+
+- ENV 
+    - 環境変数を設定するもの。
+    - 環境変数っていうのは、OSの上で動くあらゆるプロセスがこう情報を共有する為に使う変数なんです
+
+- WORKDIR
+    - このDOCKERインストラクションを実行するディレクトリーを変更してくれます
+
+    - 以下2つのDockerfileの違い。それはインストラクションgな実行される場所。
+        - なんと前者は、cdしているが、RUNの後に書かれているので結局毎回のRUNのインストラクションはルートディレクトリでtouchをしているのだ。
+
+        - 一方、後者は1つのRUN内でmkdir,cd touchしてるので、ちゃんと想像通り、ディレクトリ移動した先でtouchしてくれている・！！！
+    ```Dockerfile
+    FROM ubuntu:latest
+    RUN mkdir sample_folder
+    RUN cd sample_folder
+    RUN touch sample_file
+    ```
+
+    ```Dockerfile
+    FROM ubuntu:latest
+    RUN mkdir sample_folder $$ \
+        cd sample_folder && \
+        touch sample_file
+    ```
+
+    - よってRUN毎に毎回インストラクションのフォルダに写る必要があってRUN描くたびにcdの流れかくのだるすぎってことで、
+    - 実行ディレクトリをしてできる、WORKDIRが存在する。
+    - WORKDIR<絶対path>
+
+    - WORKDIRを指定すればそれ以降のRUN実行する場所のがそのディレクトリになる
