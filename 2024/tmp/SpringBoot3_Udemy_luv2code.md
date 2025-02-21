@@ -1096,3 +1096,383 @@ public class FunRestController {
                 entityManager.remove(user);
             ```
             👆 ID=1 の User を削除！（DELETE 相当）
+
+
+- Command Line RUnner
+    - SPringBootフレームワークのもの
+    - spring Beanがロードされた後に実行されます。
+    ```java
+    package com.luv2code.cruddemo;
+
+    import org.springframework.boot.CommandLineRunner;
+    import org.springframework.boot.SpringApplication;
+    import org.springframework.boot.autoconfigure.SpringBootApplication;
+    import org.springframework.context.annotation.Bean;
+
+    @SpringBootApplication
+    public class CruddemoApplication {
+
+        public static void main(String[] args) {
+            SpringApplication.run(CruddemoApplication.class, args);
+        }
+
+        @Bean
+        public CommandLineRunner commandLineRunner(String[] args){
+            return runner ->{
+                System.out.println("Hello World"); // カスタムコード
+            };
+        }
+    }
+
+    ```
+- DBと接続したspring projectを作ってゆく
+    - application.propertiesファイルに以下のように記載し、アプリを起動すると
+    ```txt
+    spring.datasource.url=jdbc:mysql://localhost:3306/student_tracker
+    spring.datasource.username=springstudent
+    spring.datasource.password=springstudent
+    ```
+
+    - 以下のようなログが出て接続成功する
+    ```txt
+    .   ____          _            __ _ _
+    /\\ / ___'_ __ _ _(_)_ __  __ _ \ \ \ \
+    ( ( )\___ | '_ | '_| | '_ \/ _` | \ \ \ \
+    \\/  ___)| |_)| | | | | || (_| |  ) ) ) )
+    '  |____| .__|_| |_|_| |_\__, | / / / /
+    =========|_|==============|___/=/_/_/_/
+
+    :: Spring Boot ::                (v3.4.2)
+
+    2025-02-21T00:41:02.243+09:00  INFO 2507 --- [           main] c.luv2code.cruddemo.CruddemoApplication  : Starting CruddemoApplication using Java 23.0.2 with PID 2507 (/Users/k_tanaka/other_learn/spring/dev-spring-boot/03-spring-boot-hibernate-jpa-crud/01-cruddemo-student/target/classes started by k_tanaka in /Users/k_tanaka/other_learn/spring/dev-spring-boot/03-spring-boot-hibernate-jpa-crud/01-cruddemo-student)
+    2025-02-21T00:41:02.243+09:00  INFO 2507 --- [           main] c.luv2code.cruddemo.CruddemoApplication  : No active profile set, falling back to 1 default profile: "default"
+    2025-02-21T00:41:02.429+09:00  INFO 2507 --- [           main] .s.d.r.c.RepositoryConfigurationDelegate : Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+    2025-02-21T00:41:02.437+09:00  INFO 2507 --- [           main] .s.d.r.c.RepositoryConfigurationDelegate : Finished Spring Data repository scanning in 4 ms. Found 0 JPA repository interfaces.
+    2025-02-21T00:41:02.557+09:00  INFO 2507 --- [           main] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Starting...
+    2025-02-21T00:41:02.743+09:00  INFO 2507 --- [           main] com.zaxxer.hikari.pool.HikariPool        : HikariPool-1 - Added connection com.mysql.cj.jdbc.ConnectionImpl@315f09ef
+    2025-02-21T00:41:02.744+09:00  INFO 2507 --- [           main] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Start completed.
+    2025-02-21T00:41:02.770+09:00  INFO 2507 --- [           main] o.hibernate.jpa.internal.util.LogHelper  : HHH000204: Processing PersistenceUnitInfo [name: default]
+    2025-02-21T00:41:02.793+09:00  INFO 2507 --- [           main] org.hibernate.Version                    : HHH000412: Hibernate ORM core version 6.6.5.Final
+    2025-02-21T00:41:02.806+09:00  INFO 2507 --- [           main] o.h.c.internal.RegionFactoryInitiator    : HHH000026: Second-level cache disabled
+    2025-02-21T00:41:02.910+09:00  INFO 2507 --- [           main] o.s.o.j.p.SpringPersistenceUnitInfo      : No LoadTimeWeaver setup: ignoring JPA class transformer
+    2025-02-21T00:41:02.993+09:00  INFO 2507 --- [           main] org.hibernate.orm.connections.pooling    : HHH10001005: Database info:
+        Database JDBC URL [Connecting through datasource 'HikariDataSource (HikariPool-1)']
+        Database driver: undefined/unknown
+        Database version: 9.2
+        Autocommit mode: undefined/unknown
+        Isolation level: undefined/unknown
+        Minimum pool size: undefined/unknown
+        Maximum pool size: undefined/unknown
+    2025-02-21T00:41:03.126+09:00  INFO 2507 --- [           main] o.h.e.t.j.p.i.JtaPlatformInitiator       : HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+    2025-02-21T00:41:03.127+09:00  INFO 2507 --- [           main] j.LocalContainerEntityManagerFactoryBean : Initialized JPA EntityManagerFactory for persistence unit 'default'
+    2025-02-21T00:41:03.184+09:00  INFO 2507 --- [           main] c.luv2code.cruddemo.CruddemoApplication  : Started CruddemoApplication in 1.116 seconds (process running for 1.325)
+    Hello World
+    2025-02-21T00:41:03.187+09:00  INFO 2507 --- [ionShutdownHook] j.LocalContainerEntityManagerFactoryBean : Closing JPA EntityManagerFactory for persistence unit 'default'
+    2025-02-21T00:41:03.188+09:00  INFO 2507 --- [ionShutdownHook] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Shutdown initiated...
+    2025-02-21T00:41:03.216+09:00  INFO 2507 --- [ionShutdownHook] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Shutdown completed.
+
+    Process finished with exit code 0
+
+    ```
+
+- JPA Development process
+    - JPAを介してDBテーブルとJavaオブジェクトがマッピングされる
+
+    ![alt text](../../image/image15.png)
+    - Entity classはデータベースのテーブルにマッピングされるJavaクラスのこと
+        - Must be annnoteted with @Entity
+        - public またはprotectedの引数なしのコンストラクタを持たなければならない
+
+    
+    - Entityクラスを作成。以下のようになる。DBテーブルとマッピングさせる
+    ```java
+    package com.luv2code.cruddemo.entity;
+
+    import jakarta.persistence.*;
+
+    @Entity
+    @Table(name="student")
+    public class Student {
+        //define field
+        @Id
+        @GeneratedValue(strategy= GenerationType.IDENTITY)
+        @Column(name="id")
+        private int id;
+
+        @Column(name="first_name")
+        private String firstName;
+
+        @Column(name="last_name")
+        private String lastName;
+
+        @Column(name="email")
+        private String email;
+
+        public Student(){}
+
+        public Student(String firstName, String lastName, String email) {
+            this.firstName = firstName;
+            this.lastName = lastName;
+            this.email = email;
+        }
+
+        public int getId() {
+            return id;
+        }
+
+        public void setId(int id) {
+            this.id = id;
+        }
+
+        public String getFirstName() {
+            return firstName;
+        }
+
+        public void setFirstName(String firstName) {
+            this.firstName = firstName;
+        }
+
+        public String getLastName() {
+            return lastName;
+        }
+
+        public void setLastName(String lastName) {
+            this.lastName = lastName;
+        }
+
+        public String getEmail() {
+            return email;
+        }
+
+        public void setEmail(String email) {
+            this.email = email;
+        }
+
+        @Override
+        public String toString() {
+            return "Student{" +
+                    "id=" + id +
+                    ", firstName='" + firstName + '\'' +
+                    ", lastName='" + lastName + '\'' +
+                    ", email='" + email + '\'' +
+                    '}';
+        }
+    }
+
+    ```
+
+- Saving a java object with JPA 
+    - データアクセスオブジェクトはデータベースとのインタフェースを担当する。データベースと通信するためのヘルパークラスのようなもの
+    - Data Access Object(DAO)
+    - DAOには多くのメソッドがある
+        - save()
+        - findById()
+        - findAll()
+        - findByLastNmae()
+        - update()
+        - delete()
+        - deleteAll()
+    - DAOはEntityマネージャーを利用し、DBと通信する。
+    ![alt text](../../image/image16.png)
+
+    - 低レベルの制御と柔軟性が必要な倍はEntityManagerを使う
+    - 高い抽象度を求めるのであればJpaRepository。
+
+    - @Transactional
+        - 自動でJPAのコードのトランザクションを開始終了する。
+        - なのでjavaで明示的にこれを行う必要がない
+
+    - StudentDAO.java
+    ```java
+    package com.luv2code.cruddemo.dao;
+    import com.luv2code.cruddemo.entity.Student;
+    public interface StudentDAO {
+        void save(Student theStudent);
+    }
+    ```
+
+    - StudentDAOImpl.java
+    ```java
+    package com.luv2code.cruddemo.dao;
+
+    import com.luv2code.cruddemo.entity.Student;
+    import jakarta.persistence.EntityManager;
+    import org.springframework.beans.factory.annotation.Autowired;
+    import org.springframework.stereotype.Repository;
+    import org.springframework.transaction.annotation.Transactional;
+
+    @Repository //コンポ年とスキャン、例外処理をサポート
+    public class StudentDAOImpl implements StudentDAO{
+
+        private EntityManager entityManager;
+
+        @Autowired
+        public StudentDAOImpl(EntityManager entityManager){//コンストラクタ
+            this.entityManager = entityManager;
+        }
+
+        @Override
+        @Transactional //トランザクション管理を適切にしてくれる
+        public void save(Student theStudent) {// DAOInterfaceのメソッドをオーバーライドする
+            entityManager.persist(theStudent); // DBに生徒が保存される
+        }
+    }
+
+    ```
+
+    - CruddemoApplication.java
+        - javaのオブジェクト作って、DBにセーブするっていう。Djangoでもおんなじことしたよね！
+    ```java
+    package com.luv2code.cruddemo;
+
+    import com.luv2code.cruddemo.dao.StudentDAO;
+    import com.luv2code.cruddemo.entity.Student;
+    import org.springframework.boot.CommandLineRunner;
+    import org.springframework.boot.SpringApplication;
+    import org.springframework.boot.autoconfigure.SpringBootApplication;
+    import org.springframework.context.annotation.Bean;
+
+    @SpringBootApplication
+    public class CruddemoApplication {
+
+        public static void main(String[] args) {
+            SpringApplication.run(CruddemoApplication.class, args);
+        }
+
+        @Bean
+        public CommandLineRunner commandLineRunner(StudentDAO studentDAO){
+            return runner ->{
+                createStudent(studentDAO);
+            };
+        }
+
+        private void createStudent(StudentDAO studentDAO) {
+
+            System.out.println("creating a new student object");
+            Student tempStudent = new Student("tanaka","kenya","kenya6111@gmail.com");
+
+            System.out.println("saving the student");
+            studentDAO.save(tempStudent);
+
+            System.out.println("saved student. generated id: "+ tempStudent.getId());
+        }
+
+    }
+
+    ```
+
+    - 上記ソースでDBにレコードが１行追加されるって感じ
+    - Entityアノテーション
+        - データベースのテーブルに対応するクラス
+        - Spring JPA がこのクラスをもとに DB 操作をする
+        - ポイント
+            - @Entity → このクラスが データベースのテーブルに対応することを JPA に伝える
+            - @Id @GeneratedValue → id は 自動で増える主キー
+            - @Table(name = "student") → DBのテーブル名を明示
+            - 🔹 英単語の意味
+            - Entity = 実体・存在するもの
+            - 「データベースに存在するもの」という意味で使われる
+            - Java では、DB に対応するオブジェクトを @Entity でマークする
+            - データベースの世界では「データの単位（レコード）」を指す
+
+    - DAO(data access object)
+        - エンティティ（Student）とデータベースのやり取りを担当
+        - entityManagerを使ってDbへの保存や検索、更新削除などなど行う
+        - Djangoでいう、ｍodel.save()やobjects.get()に相当
+    
+    - StudentDAOImpl
+        - Spring が データアクセス層（DAO）として管理する
+
+    - Repository
+        - 🔹 英単語の意味
+        - Repository = 倉庫・保管庫・情報の蓄積場所
+        - データを保存する場所（データベース）とのやりとりをする部分
+        - 🔹 由来
+        - 英語の Repository は「倉庫」「情報の保管庫」
+        - データを「出し入れする場所」なので、DB とのやりとりを担当
+        - 「データの出入り口」と考えると覚えやすい！
+        - 🔹 イメージ
+        🏢 データベースが「倉庫」で、Repository は「倉庫管理人」
+    
+    - Beanアノテーション
+    Bean（ビーン）
+        🔹 英単語の意味
+        Bean = JavaBeans（設定情報を持つオブジェクト）
+        Spring では「Spring に管理されるオブジェクト」のことを指す
+
+    - Service（サービス）
+        🔹 英単語の意味
+        Service = サービス、業務、処理をまとめるもの
+        「ビジネスロジックをまとめるクラス」
+        現実世界でも「サービス業」は色んな処理をまとめて提供
+        アプリでも「データの加工・変換」をまとめる
+        Service 層を作ると Controller と DAO を分離できる
+
+    - 🚀 覚えやすくするコツ
+        Entity は「データの実体（実在するもの）」
+        Repository は「データの倉庫（倉庫管理人）」
+        DAO は「データベースとの接続プラグ」
+        Bean は「Spring に管理される豆」
+        Service は「データ処理をまとめる業務」
+    
+    - Spring では インターフェース を指定してインジェクトするのが基本
+    - CruddemoApplication.java では、以下のように StudentDAO を受け取っている：
+
+        ```java
+            @Bean
+            public CommandLineRunner commandLineRunner(StudentDAO studentDAO) {
+                return runner -> {
+                    createStudent(studentDAO);
+                };
+            }
+        ```
+        - この StudentDAO は インターフェース（StudentDAOImpl ではない）。
+        - でも、この studentDAO.save(tempStudent); は普通に動く。
+
+    - 2️⃣ Spring が StudentDAO の実装クラス（StudentDAOImpl）を自動でインジェクト
+        StudentDAOImpl.java を見ると、@Repository がついている：
+
+        ```java
+            @Repository
+            public class StudentDAOImpl implements StudentDAO {
+            @Repository をつけると、Spring がこのクラスを DI コンテナに登録 する
+            StudentDAO の型で StudentDAOImpl のインスタンスを管理
+            そのため @Autowired で StudentDAO を受け取ると、Spring は StudentDAOImpl のインスタンスを渡してくれる
+            3️⃣ だから StudentDAO を使っても、実際は StudentDAOImpl のメソッドが呼ばれる
+        ```
+        
+        ```java
+            studentDAO.save(tempStudent);
+        ```
+        - これは、実際には：
+
+        ```java
+        StudentDAOImpl studentDAO = new StudentDAOImpl(entityManager);
+        studentDAO.save(tempStudent);
+        ```
+        と同じ動きをする。
+
+        - ✅ じゃあ StudentDAOImpl を直接指定すればいいのでは？
+        - これは 以前の「@Qualifier を使う理由」の話と同じ。
+
+        - もし、以下のように StudentDAOImpl を直接指定すると：
+
+        ```java
+        @Bean
+        public CommandLineRunner commandLineRunner(StudentDAOImpl studentDAO) {  // ← 直接指定
+            return runner -> {
+                createStudent(studentDAO);
+            };
+        }
+        ```
+        - StudentDAOImpl に依存する形になり、もし StudentDAOImpl を 別の実装（例えば StudentJdbcDAOImpl）に変更したいときに影響が大きい
+        - インターフェースを使うことで「どの実装を使うか？」を変更しやすくする
+        - → これが 「インターフェースを使う最大のメリット」
+
+        - 以下を実行すると、プライマリーキーのインクリメントを自由に設定できる
+        ```sql
+        Alter table student_tracker.student AUTO_INCREMENT=3000;
+        ```
+
+        - 以下実行することでDBテーブル内のデータというかレコードをけして、インクリメントも1にリセットできる
+            truncate student_tracker.student;
