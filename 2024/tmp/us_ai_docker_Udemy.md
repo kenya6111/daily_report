@@ -708,10 +708,14 @@
     - WORKDIRを指定すればそれ以降のRUN実行する場所のがそのディレクトリになる
 
 ## 9章
-- -vオプションを使ってファイルシステムを共有する
-
-
-
+- -vオプションを使ってファイルシステムを共有する(ホストのファイルシステムをコンテナにマウントする)
+    - コンテナからホストのファイルシステムへは全くアクセスできない状態なんですよね。
+    - そこでこのマウントオプションを使うことであたかも、ホストにあるファイルシステムがコンテナのファイルシステムにあるかのように振る舞うことができます
+    - 例えばホスト内のdocument/をマウントすると、コンテナの中に入った時にマウンTのしてdocument配下のファイルが見れるって感じ（実際にコンテナ内にあるわけではない）
+    - 👆でなんでコンテナに置かないのかというと、ファイルシステムを丸ごとコンテナ内におくと、コンテナの溶炉湯がめちゃくちゃ大き苦なるよね。
+    - コンテナってのは誰かに配って開発するもんだから、容量大きくしたくないんよね、。だからコンテナにファイルシステムを置くのではなくてあくまでもホスト側に置いておいて、コンテナ内から見れるって感じにしてる。
+    - -v<host>:<container>
+    - host にホスと側マウントしたいファイルパスがはいる。<container>がマウントする先のパス
 
 - -p<host_port>:<container_port>でホストのポートをコンテナのポートに繋げる
     - このポートって何かっていうと、プロセスがデータ通信するために使うもの
@@ -725,3 +729,83 @@
 
     - 別にホストとコンテナのportは一緒じゃなくても良くて、docker run -it -p 1234:8888とかにすれば
     ローカルでocalhost:1234にログインすれば良いってこと。
+
+
+## 13章
+- docker compose
+    - 今回はrailsとpostgresqlのコンテナをそれぞれ作る
+    - docker compose を使うと複数のコンテナを簡単に管理できる
+
+    - Dockerfile
+    ```txt
+    FROM ruby:2.5
+    RUN apt-get update
+    RUN apt-get install -y \
+        build-essential \
+        libpq-dev \
+        nodejs \
+        postgresql-client \
+        yarn
+
+    WORKDIR /product-register
+    COPY Gemfile Gemfile.lock /product-register/
+    RUN bundle install
+    ```
+        - FROM ruby:2.5 → ベースイメージとして Ruby 2.5 の公式イメージを使用（これは OS + Ruby が入ってる）。
+        - RUN apt-get update → コンテナ内のパッケージ情報を最新にする。
+        - RUN apt-get install -y ... → 必要なライブラリを コンテナ内 にインストール。
+        - WORKDIR /product-register → コンテナ内 に /product-register という作業ディレクトリを設定。
+        - COPY Gemfile Gemfile.lock /product-register → ホスト（自分のPC） から Gemfile と Gemfile.lock を コンテナ内 にコピー。
+        - RUN bundle install → コンテナ内 で bundle install を実行し、Gem（ライブラリ）をインストール。
+
+    - Gemfile
+    ```txt
+    source 'https://rubygems.org' #どこからgemを撮ってくるのか
+    gem 'rails','~>5.2'
+
+    ## Gemifleは使うパッケージを一覧で書いておく場所
+    ## このファイルをコンテナへコピーしてそこでインストールするってところだけ抑える
+
+    ```
+        - どの Gem を使うか」 をリスト化して記述するファイル。
+        - bundle install を実行すると、この Gemfile に基づいて必要な Gem がダウンロード＆インストールされる。
+    
+    - 上記のディレクトリでdockerfileからimageを生成して
+        - docker build -t rails-test2 .
+    - imageからコンテナ生成、起動
+        - docker run -v /Users/k_tanaka/other_learn/Docker/docker_spring_test/product-register:/product-register -p 3001:3001 -it a5b078e82af3 bash
+        root@17e7c103fcfc:/product-register# ls
+        Dockerfile  Gemfile  Gemfile.lock
+        root@17e7c103fcfc:/product-register# exit
+        exit
+    
+    - 毎回上記のコマンド打つのクッソだるいよね。
+    - そんな時にdocker composeの出番。
+    - お案じdokcerkオンテキストに、docker-compose.ymlを置く・
+    - 中身はdocker runのコマンド打つ時に書いた-p -v とかのオプションとかをかく
+    ![alt text](../../image/image17.png)
+
+    - docker-compose.ymlの中身
+        - 最初にdocker-composeってのを書いていくよーって宣言書く
+        - その下にネストした形でサービスを書いていく
+        - サービスってのは、コンテナの数と言っていい。今回はrailsのコンテナと、postgresqlのコンテナを作ったが、それぞれがサービスって感じ
+        - なのでdocker composeが2つのコンテナを操作する。1つはrailsおwebサービスで、1つはデータベスのサービス
+    
+    - docker composeのymlの書き方
+        - docker runのコマンドのオプションの数だけdocker compose.ymlに書いていくって感じかな基本は。
+        - なのでそんなに量は多くない
+        - なので一旦その分だけdocker compose の書き方を覚えていけば良いかなと思います
+        ![alt text](../../image/image18.png)
+
+        - まず最初のdocker-composeのバージョン書く（ここはもう覚えてください）
+        - ちなみにymlはキーとバリューの組み合わせで描く
+        - servicesの下に各サービスを書いていく感じ。今回はservicesの下にrailsのサービスとDBのサービス2つ描くことになるね・
+        - railsのwebアプリは大体「web」か「app」とかく
+        - その下にwebのサービスに対してのパラメータを書いてく
+        - どういう憂風に描くかっていうと、dokcercomoseはあくまでコンテナを使う時にどういうふうに起動するかっていうパラメタをかく
+        - 逆にDockerfileってのはコンテナの中身そのものを定義するもの」
+        - volumesのパスは相対パスで書くようにする
+        ![alt text](../../image/image19.png)
+
+        - docker compose upはimageがなければビルドも一緒にし￥てくれるので基本このコマンドすればいい
+        - もしDockeefileを更新した際はbuildコマンド使う
