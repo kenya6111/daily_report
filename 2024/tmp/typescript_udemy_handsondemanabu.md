@@ -174,3 +174,57 @@
     ```
     - 以下サイトを参考にts-nodeではなく、tsxというパッケージを使うといけた。
     - https://qiita.com/shunii/items/1863bb65a463783b3213
+
+- ts-node-dev
+    - Compiles your TS app and restarts when files are modified.
+    - ファイルが変更されたらソースをコンパイルし、それを実行してくれる
+
+    - ts-node-dev実行時に以下エラー発生
+    ```txt
+    $ sudo npm install --save-dev ts-node-dev@2.0.0
+    npm warn deprecated inflight@1.0.6: This module is not supported, and leaks memory. Do not use it. Check out lru-cache if you want a good and tested way to coalesce async requests by a key value, which is much more comprehensive and powerful.
+    npm warn deprecated rimraf@2.7.1: Rimraf versions prior to v4 are no longer supported
+    npm warn deprecated glob@7.2.3: Glob versions prior to v9 are no longer supported
+
+    added 47 packages, and audited 73 packages in 900ms
+
+    11 packages are looking for funding
+    run `npm fund` for details
+
+    found 0 vulnerabilities
+    $ npx ts-node-dev --respawn src/install-typescript.ts
+    [INFO] 01:44:47 ts-node-dev ver. 2.0.0 (using ts-node ver. 10.9.2, typescript ver. 5.7.3)
+    Compilation error in /Users/k_tanaka/hc/typescript-udemy-handsondemanabu/typescript-for-javascript-developers/src/install-typescript.ts
+    Error: Must use import to load ES Module: /Users/k_tanaka/hc/typescript-udemy-handsondemanabu/typescript-for-javascript-developers/src/install-typescript.ts
+        at Object.<anonymous> (/Users/k_tanaka/hc/typescript-udemy-handsondemanabu/typescript-for-javascript-developers/src/install-typescript.ts:1:7)
+        at Module.<anonymous> (node:internal/modules/cjs/loader:1546:14)
+        at Module._compile (/Users/k_tanaka/hc/typescript-udemy-handsondemanabu/typescript-for-javascript-developers/node_modules/source-map-support/source-map-support.js:568:25)
+        at Module.m._compile (/private/var/folders/3f/fn8dr_n5791c7wmj9txs5r6r0000gn/T/ts-node-dev-hook-8816110685144951.js:69:33)
+        at node:internal/modules/cjs/loader:1689:10
+        at require.extensions..jsx.require.extensions..js (/private/var/folders/3f/fn8dr_n5791c7wmj9txs5r6r0000gn/T/ts-node-dev-hook-8816110685144951.js:114:20)
+        at require.extensions.<computed> (/private/var/folders/3f/fn8dr_n5791c7wmj9txs5r6r0000gn/T/ts-node-dev-hook-8816110685144951.js:71:20)
+        at Object.nodeDevHook [as .ts] (/Users/k_tanaka/hc/typescript-udemy-handsondemanabu/typescript-for-javascript-developers/node_modules/ts-node-dev/lib/hook.js:63:13)
+        at Module.load (node:internal/modules/cjs/loader:1318:32)
+        at Function._load (node:internal/modules/cjs/loader:1128:12)
+    [ERROR] 01:44:47 Error: Must use import to load ES Module: /Users/k_tanaka/hc/typescript-udemy-handsondemanabu/typescript-for-javascript-developers/src/install-typescript.ts
+
+    ^C
+    ```
+
+    - 「 Must use import to load ES Module:」？
+    - どうやらTypeScript の実行時に ES モジュール (ESM) と CommonJS (CJS) の違いによって発生しているみたい。
+    - まあ要はimportが使えないぞって言われてる＝commonjsんモジュールを使う設定にしろって意味かなってことで、
+    - package.json を見てみると
+     "type": "module" を設定していた。。
+    type:moduleでESMを使うせってになるらしい。
+    - なのでcommonjsの設定にしてみる
+    "type": "commonjs",
+    - 再度動かし見てると
+    - うまく動きました。
+    ```txt
+    $ npx ts-node-dev --respawn src/install-typescript.ts  ←ここ！！！
+    [INFO] 01:47:12 ts-node-dev ver. 2.0.0 (using ts-node ver. 10.9.2, typescript ver. 5.7.3)
+    { message: 'hello typescript' }
+    [INFO] 01:47:35 Restarting: /Users/k_tanaka/hc/typescript-udemy-handsondemanabu/typescript-for-javascript-developers/src/install-typescript.ts has been modified
+    { message: 'hello typescript' }
+    ```
