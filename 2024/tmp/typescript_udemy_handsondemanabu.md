@@ -4,7 +4,6 @@
         - superset = A set which includes another set or sets
         - 1つの集合あるイワ複数の集合を含む大きな集合
 
-
     ![alt text](../../image/image23.png)
     - javascriptでもできることはtypescriptでもできる
     - typescriptの開発元はマイクロソフト
@@ -228,3 +227,10 @@
     [INFO] 01:47:35 Restarting: /Users/k_tanaka/hc/typescript-udemy-handsondemanabu/typescript-for-javascript-developers/src/install-typescript.ts has been modified
     { message: 'hello typescript' }
     ```
+
+## 5章
+- vscode自体の設定はjson形式で一括管理されている
+    - setttings→preferrenceに行って検索窓に「settings json」と検索すれば　edit setings.jsonとかが出てくる
+- tsconfig.json
+    - https://www.typescriptlang.org/docs/handbook/tsconfig-json.html#handbook-content
+    - 「tsc --init」でtsconfig.jsonを生成できる
