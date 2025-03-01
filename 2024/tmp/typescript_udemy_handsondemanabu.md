@@ -234,3 +234,5 @@
 - tsconfig.json
     - https://www.typescriptlang.org/docs/handbook/tsconfig-json.html#handbook-content
     - 「tsc --init」でtsconfig.jsonを生成できる
+
+## 6章
