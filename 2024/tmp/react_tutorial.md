@@ -3,120 +3,22 @@
 - `MyButton` `MyButton2` を宣言したら、別のコンポーネントにネストできます。
 - <MyButton /> が大文字で始まっていることに注意してください。こうすることで、React のコンポーネントであるということを示しています。React のコンポーネント名は常に大文字で始める必要があり、HTML タグは小文字でなければなりません。
 - コンポーネントは複数の JSX タグを return することはできません。`<div>...</div>` や空の `<>...</>` ラッパのような共通の親要素で囲む必要があります。
-```html
-<!DOCTYPE html>
-<html>
-  <head>
-    <meta charset="UTF-8" />
-    <title>Hello World</title>
-    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
-    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+- React の名前は、「反応する（React）」という意味から来ている。ユーザーの操作やデータの変化に「リアクティブ（Reactive）」に反応する UI を作るためのライブラリ だから、React という名前になった。
+    ```html
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <meta charset="UTF-8" />
+        <title>Hello World</title>
+        <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+        <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
 
-    <!-- Don't use this in production: -->
-    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-</head>
-<body>
-    <div id="root"></div>
-    <script type="text/babel">
-    function MyButton() {
-        return (
-            <button>I'm a button</button>
-        );
-    }
-    function MyButton2() {
-        return (
-            <button>I'm a button2!!</button>
-        );
-    }
-    function MyApp() {
-            return (
-                <div>
-                    <h1>Hello, world!</h1>
-                    <MyButton />
-                    <MyButton2 />
-                </div>
-        );
-    }
-
-    const container = document.getElementById('root');
-    const root = ReactDOM.createRoot(container);
-    root.render(<MyApp />);
-
-    </script>
-</body>
-</html>
-```
-
-![alt text](../../image/image.png)
-
-- 下記の例では、`style={{}}` は特別な構文ではなく、`style={ }` という JSX の波括弧内にある通常の `{} オブジェクト`です。スタイルが JavaScript 変数に依存する場合は、style 属性を使うことができます。
-
-```html
-<!DOCTYPE html>
-<html>
-  <head>
-    <meta charset="UTF-8" />
-    <title>Hello World</title>
-    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
-    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
-
-    <!-- Don't use this in production: -->
-    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-</head>
-<body>
-    <div id="root"></div>
-    <script type="text/babel">
-    const user = {
-        name: 'Hedy Lamarr',
-        imageUrl: '/image.png',
-        imageSize: 90,
-    };
-    function MyButton() {
-        return (
-            <button>I'm a button</button>
-        );
-    }
-    function MyButton2() {
-        return (
-            <button>I'm a button2!!</button>
-        );
-    }
-    function MyApp() {
-            return (
-                <div>
-                    <h1>Hello, world!</h1>
-                    <MyButton />
-                    <MyButton2 />
-                    <h1>{user.name}</h1>
-                    <img
-                        className="avatar"
-                        src={user.imageUrl}
-                        alt={'Photo of ' + user.name}
-                        style={{
-                            width: user.imageSize,
-                            height: user.imageSize
-                        }}
-                    />
-                </div>
-        );
-    }
-
-    const container = document.getElementById('root');
-    const root = ReactDOM.createRoot(container);
-    root.render(<MyApp />);
-
-    </script>
-</body>
-</html>
-```
-
-
-- 条件付きレンダー
-    - React には、条件分岐を書くための特別な構文は存在しません。代わりに、通常の JavaScript コードを書くときに使うのと同じ手法を使います
-```html
-
-    <div id="root"></div>
-    <script type="text/babel">
+        <!-- Don't use this in production: -->
+        <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    </head>
+    <body>
+        <div id="root"></div>
+        <script type="text/babel">
         function MyButton() {
             return (
                 <button>I'm a button</button>
@@ -127,70 +29,170 @@
                 <button>I'm a button2!!</button>
             );
         }
-        let content;
-        let isLoggedIn =false
-        if (isLoggedIn) {
-            content = <MyButton />;
-        } else {
-            content = <MyButton2 />;
-        }
-    function MyApp() {
-            return (
-                <div>
-                    <h1>Hello, world!</h1>
-                    {content}
-
-                    // コンパクトなコードをお望みの場合は、条件 ? 演算子を使用できます
-                    {isLoggedIn ? (
+        function MyApp() {
+                return (
+                    <div>
+                        <h1>Hello, world!</h1>
                         <MyButton />
-                    ) : (
                         <MyButton2 />
-                    )}
+                    </div>
+            );
+        }
 
-                    // else 側の分岐が不要な場合は、短い論理 && 構文を使用することもできる
-                    {isLoggedIn && <MyButton2 />}
-                </div>
-        );
-    }
-    const container = document.getElementById('root');
-    const root = ReactDOM.createRoot(container);
-    root.render(<MyApp />);
-    </script>
-```
+        const container = document.getElementById('root');
+        const root = ReactDOM.createRoot(container);
+        root.render(<MyApp />);
 
-- リストのレンダー
+        </script>
+    </body>
+    </html>
+    ```
+
+    ![alt text](../../image/image.png)
+
+- 下記の例では、`style={{}}` は特別な構文ではなく、`style={ }` という JSX の波括弧内にある通常の `{} オブジェクト`です。スタイルが JavaScript 変数に依存する場合は、style 属性を使うことができます。
+
+    ```html
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <meta charset="UTF-8" />
+        <title>Hello World</title>
+        <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+        <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+
+        <!-- Don't use this in production: -->
+        <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    </head>
+    <body>
+        <div id="root"></div>
+        <script type="text/babel">
+            const user = {
+                name: 'Hedy Lamarr',
+                imageUrl: '/image.png',
+                imageSize: 90,
+            };
+            function MyButton() {
+                return (
+                    <button>I'm a button</button>
+                );
+            }
+            function MyButton2() {
+                return (
+                    <button>I'm a button2!!</button>
+                );
+            }
+            function MyApp() {
+                    return (
+                        <div>
+                            <h1>Hello, world!</h1>
+                            <MyButton />
+                            <MyButton2 />
+                            <h1>{user.name}</h1>
+                            <img
+                                className="avatar"
+                                src={user.imageUrl}
+                                alt={'Photo of ' + user.name}
+                                style={{
+                                    width: user.imageSize,
+                                    height: user.imageSize
+                                }}
+                            />
+                        </div>
+                );
+            }
+
+            const container = document.getElementById('root');
+            const root = ReactDOM.createRoot(container);
+            root.render(<MyApp />);
+        </script>
+        </body>
+    </html>
+    ```
+
+
+- 条件付きレンダリング
+    - React には、条件分岐を書くための特別な構文は存在しません。代わりに、通常の JavaScript コードを書くときに使うのと同じ手法を使います
+    ```html
+
+        <div id="root"></div>
+        <script type="text/babel">
+            function MyButton() {
+                return (
+                    <button>I'm a button</button>
+                );
+            }
+            function MyButton2() {
+                return (
+                    <button>I'm a button2!!</button>
+                );
+            }
+            let content;
+            let isLoggedIn =false
+            if (isLoggedIn) {
+                content = <MyButton />;
+            } else {
+                content = <MyButton2 />;
+            }
+        function MyApp() {
+                return (
+                    <div>
+                        <h1>Hello, world!</h1>
+                        {content}
+
+                        // コンパクトなコードをお望みの場合は、条件 ? 演算子を使用できます
+                        {isLoggedIn ? (
+                            <MyButton />
+                        ) : (
+                            <MyButton2 />
+                        )}
+
+                        // else 側の分岐が不要な場合は、短い論理 && 構文を使用することもできる
+                        {isLoggedIn && <MyButton2 />}// true のとき <AdminPanel />、false のとき何も表示しない
+                    </div>
+            );
+        }
+        const container = document.getElementById('root');
+        const root = ReactDOM.createRoot(container);
+        root.render(<MyApp />);
+        </script>
+    ```
+
+- リストのレンダリング
     - コンポーネントのリストをレンダーする場合は、for ループ や 配列の map() 関数 といった JavaScript の機能を使って行います
-    - `<li>` に `key` 属性があることに注意してください。リスト内の各項目には、兄弟の中でそれを一意に識別するための文字列または数値を渡す必要があります。通常、`key` はデータから来るはずで、データベース上の ID などが該当します。React は、後でアイテムを挿入、削除、並べ替えることがあった際に、何が起こったかを key を使って把握します。
+    - `<li>` に `key` 属性があることに注意してください。リスト内の各項目には、兄弟の中でそれを一意に識別するための文字列または数値を渡す必要があります。通常、`key` はデータから来るはずで、データベース上の ID などが該当します。
+    React は、後でアイテムを挿入、削除、並べ替えることがあった際に、何が起こったかを key を使って把握します。
+    - 中括弧を使用することで変数を埋め込める
 
-```html
-    <div id="root"></div>
-    <script type="text/babel">
-        const products = [
-            { title: 'Cabbage', isFruit: false, id: 1 },
-            { title: 'Garlic', isFruit: false, id: 2 },
-            { title: 'Apple', isFruit: true, id: 3 },
-        ];
-
-        const listItems = products.map(product =>
-            <li
-            key={product.id}
-            style={{
-                color: product.isFruit ? 'magenta' : 'darkgreen'
-            }}
-            >
-            {product.title}
-            </li>
-        );
-    function MyApp() {
-        return (
-            <ul>{listItems}</ul>
-        );
-    }
-    const container = document.getElementById('root');
-    const root = ReactDOM.createRoot(container);
-    root.render(<MyApp />);
-    </script>
-```
+    ```html
+        <div id="root"></div>
+        <script type="text/babel">
+            const products = [
+                { title: 'Cabbage', isFruit: false, id: 1 },
+                { title: 'Garlic', isFruit: false, id: 2 },
+                { title: 'Apple', isFruit: true, id: 3 },
+            ];
+                                        // mapの書き方注意
+            const listItems = products.map(product =>
+                <li
+                key={product.id}
+                style={{
+                    color: product.isFruit ? 'magenta' : 'darkgreen'　
+                }}
+                >
+                {product.title}
+                </li>
+            );
+        function MyApp() {
+            return (
+                <ul>{listItems}</ul>
+            );
+        }
+        const container = document.getElementById('root');
+        const root = ReactDOM.createRoot(container);
+        root.render(<MyApp />);
+        </script>
+    ```
 
 ![alt text](../../image/image2.png)
 
@@ -205,7 +207,7 @@
         }
     function MyApp() {
         return (
-            <button onClick={handleClick}>
+            <button onClick={handleClick}>　// ここは関数を渡すだけなので（）で呼び出さないこと。
             Click me
             </button>
         );
@@ -220,6 +222,7 @@
     - しばしば、コンポーネントに情報を「記憶」させて表示したいことがあります。例えば、ボタンがクリックされた回数を数えて覚えておきたい場合です。これを行うには、コンポーネントに state を追加します。
 
     - まず、React から useState をインポートします。
+    - useで始まる関数はフック(hook)と呼ばれます。
 
     ```html
     import { useState } from 'react';
@@ -238,6 +241,17 @@
     }
     ```
 
+
+    - useState(0) の意味は：
+        count → 今の状態（変数）
+        setCount → 状態を更新する関数
+        useState(0) → count の初期値を 0 にする
+
+    - useState とは？
+        - useState は React の「状態（state）」を管理するためのフック（hook） です。
+        - React のコンポーネントの中で、変数を持ち続けるための関数
+        - ボタンをクリックしたらカウントを増やす みたいな動作に必要
+        - コンポーネントが再描画されても値を保持できる！
 
     - 以下、上記の実装例
     ```html
@@ -288,10 +302,12 @@
     ```
     ![alt text](../../image/image3.png)
 
-    - 以下は`useState`を2ボタン共通で管理するように修正したもの。どちらのボタンを押しても、両方のボタンのカウントがカウントアップされる。
+    - 以下は`useState`を2ボタン共通で管理するように修正したもの。
+        - どちらのボタンを押しても、両方のボタンのカウントがカウントアップされる。
         - `MyApp` から各 `MyButton` に `state` を渡し、共有のクリックハンドラも一緒に渡します。以前に `<img>` のような組み込みタグで行ったときと同様、JSX の波括弧を使うことで `MyButton` に情報を渡すことができます。
         - このように渡される情報は `props` と呼ばれます。`MyApp` コンポーネントは `count` 状態と `handleClick` イベントハンドラを保持しており、それらをどちらも `props` として各ボタンに渡します。
         - ボタンをクリックすると、onClick ハンドラが発火します。各ボタンの onClick プロパティは MyApp 内の handleClick 関数となっているので、その中のコードが実行されます。そのコードは setCount(count + 1) を呼び出し、count という state 変数をインクリメントします。新しい count の値が各ボタンに props として渡されるため、すべてのボタンに新しい値が表示されます。この手法は「state のリフトアップ（持ち上げ）」と呼ばれています。リフトアップすることで、state をコンポーネント間で共有できました
+    - コンポーネントタグの属性が、実際のコンポーネントで受け取る引数とリンクしている
     ```html
     <!DOCTYPE html>
     <html>
@@ -340,3 +356,184 @@
     ![alt text](../../image/image4.png)
 
 ## チュートリアル : 三目並べ
+
+- コンポネントタグに属性みたいに引数をかける value="0"とかで渡して子コンポーネントで受け取る
+- 変数は{ }を使って画面に表示できる
+```html
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8" />
+    <title>Hello World</title>
+    <link rel="stylesheet" href="./style.css">
+    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+
+    <!-- Don't use this in production: -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+</head>
+<body>
+    <div id="root"></div>
+    <script type="text/babel">
+
+    function Square({value}) {
+        return (
+            <button
+                className="square"
+        >
+        {value}
+        </button>
+        );
+    }
+
+    function MyApp() {
+        return (
+            <>
+            <div className="board-row">
+                <Square value="0"/>
+                <Square value="1"/>
+                <Square value="2"/>
+            </div>
+            <div className="board-row">
+                <Square value="3"/>
+                <Square value="4"/>
+                <Square value="5"/>
+            </div>
+            <div className="board-row">
+                <Square value="6"/>
+                <Square value="7"/>
+                <Square value="8"/>
+            </div>
+            </>
+        );
+    }
+    const container = document.getElementById('root');
+    const root = ReactDOM.createRoot(container);
+    root.render(<MyApp />);
+    </script>
+</body>
+</html>
+```
+
+- 子コンポーネントにクリック時のメソッドとonClickを付与。クリック時にアラートがなる
+```html
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <title>Hello World</title>
+    <link rel="stylesheet" href="./style.css">
+    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+
+    <!-- Don't use this in production: -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+</head>
+<body>
+    <div id="root"></div>
+    <script type="text/babel">
+
+    function MyButton({value}) {
+        function handleClick(){ // 追加！！！
+            alert("clicked!")
+        }
+
+        return <button
+            className="square"
+            onClick={handleClick}// 追加！！！
+            >
+                {value}
+            </button>;
+    }
+
+    function MyApp() {
+        return (
+            <>
+            <div className="board-row">
+                <MyButton value="0"/>
+                <MyButton value="1"/>
+                <MyButton value="2"/>
+            </div>
+            <div className="board-row">
+                <MyButton value="3"/>
+                <MyButton value="4"/>
+                <MyButton value="5"/>
+            </div>
+            <div className="board-row">
+                <MyButton value="6"/>
+                <MyButton value="7"/>
+                <MyButton value="8"/>
+            </div>
+            </>
+        );
+    }
+    const container = document.getElementById('root');
+    const root = ReactDOM.createRoot(container);
+    root.render(<MyApp />);
+    </script>
+</body>
+</html>
+```
+
+- 子コンポーネント内にuseStateで「value」を設定する。（子コンポーネントにclick時の関数があり、クリック時にsetValue()でセット。）
+- ますクリック時にXが表示されるようになる。各マスはそれぞれ独立している
+```html
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <title>Hello World</title>
+    <link rel="stylesheet" href="./style.css">
+    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+
+    <!-- Don't use this in production: -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+</head>
+<body>
+    <div id="root"></div>
+    <script type="text/babel">
+
+    function Square() {
+
+        const [value, setValue] = React.useState(null);
+        function handleClick(){
+            setValue('X')
+        }
+
+        return <button
+            className="square"
+            onClick={handleClick}
+            >
+                {value}
+            </button>;
+    }
+
+    function MyApp() {
+        return (
+            <>
+            <div className="board-row">
+                <Square />
+                <Square />
+                <Square />
+            </div>
+            <div className="board-row">
+                <Square />
+                <Square />
+                <Square />
+            </div>
+            <div className="board-row">
+                <Square />
+                <Square />
+                <Square />
+            </div>
+            </>
+        );
+    }
+    const container = document.getElementById('root');
+    const root = ReactDOM.createRoot(container);
+    root.render(<MyApp />);
+    </script>
+</body>
+</html>
+```
