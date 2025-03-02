@@ -1140,3 +1140,390 @@ for($i =0; $i <10; $i++){// forは困難感じで書く
 
         - use Carbon\Carbon; の use は require とは異なり、namespace を指定してクラスを使いやすくするためのもの です。
         - 左の Carbon → namespace（名前空間） , 右の Carbon → クラス名
+
+## 6章
+
+- ralavel install
+    - プロジェクト作成
+        - composer create-project laravel/laravel:^9 task_test --prefer-dist
+        - laravel/laravel:^9でlaravelの９系の最新が取れる
+        - task_testがプロジェクト名
+        - --prefer-distで圧縮版ダウンロードで少し早くなる
+    - 「php artisan serve」でサーバ起動
+
+    - タイムゾーンを日本にする
+        - config/app.php
+        ```php
+            <!-- 'timezone' => 'UTC', -->
+            'timezone' => 'Asia/Tokyo',
+        ```
+    
+- デバックバーを表示する
+    - composer require barryvdh/laravel-debugbar --devでインストール。
+    ```php
+    {
+        "name": "laravel/laravel",
+        "type": "project",
+        "description": "The Laravel Framework.",
+        "keywords": ["framework", "laravel"],
+        "license": "MIT",
+        "require": {
+            "php": "^8.0.2",
+            "barryvdh/laravel-debugbar": "^3.7", ←ここ！追加されてる
+            "guzzlehttp/guzzle": "^7.2",
+            "laravel/framework": "^9.19",
+            "laravel/sanctum": "^3.0",
+            "laravel/tinker": "^2.7"
+        },
+        "require-dev": {
+    ```
+    - 修正したファイルなど修正したら以下コマンドなど打ってしまう
+    ```txt
+        php artisan config:clear
+        php artisan cache:clear
+        php artisan view:clear
+    ```
+- デバックバーを非表示にする
+    - 以下箇所を以下のようにすると非表示になった
+        - .env
+            ```php
+                APP_DEBUG=false
+            ```
+        - config/debugbar.php
+            ```php
+                'enabled' => env('DEBUGBAR_ENABLED', null),// ここはtrueにしてると.envをfalseにしても出てきてしまう
+            ```
+- DB接続
+    - MAMPアプリのwebstart押下→ ブラウザでtools→phpAdminを押してDB設定画面からユーザとテーブル作成
+    - 「php artisan migrate」コマンドでDB接続確認できる
+
+- Lavravelの概要
+    - MVCモデル
+    - Model DBとのやりとり
+    - View 見た目
+    - COntroller 処理
+    - Routing  アクセスの振り分け
+    - Migration DBテーブルの履歴管理
+
+- ルート、ビュー
+    - routes/web.php
+
+- Arsisan(職人という意味)
+    - Laravelでよく使う操作やファイル生成を担当
+    - 「php artisan list」でできるコマンドのリスト表示できる
+
+- Model (DBとやり取りする)
+    - DBとのやりとりをSQLではなくて、その言語で書ける技術をORM/ORマッパーという。（Object-Relational Mapping）
+    - laravelではORマッパーが「Eloquant」という名前で作られている
+    - modelファイルの作り方
+        - 「php artisan make:model Test」 (頭を大文字で書くのが一般的)
+        - app/Modelsディレクトリ下にモデルファイルふができている
+
+- マイグレーション
+    - ファイル場所はdatabases/migrations
+    - モデルは単数系、ミグレーションは複数形で書くこと
+    - 単数、複数形をLaraveｌが自動で判定してくれる
+    -「php artisan make:model Test」 でさっきTestテーブル作ったので
+        - 「php artisan make:migration create_tests_table」 でマイグレーションファイル書いて
+        - 「php artisan migrate」　これでマイグレート マイグレーションファイルを適用させる。DBの方に適用される
+
+        - ちなみに以下のようなマイグレーションファイルができている
+
+        ```php
+        <?php
+
+        use Illuminate\Database\Migrations\Migration;
+        use Illuminate\Database\Schema\Blueprint;
+        use Illuminate\Support\Facades\Schema;
+
+        return new class extends Migration
+        {
+            /**
+            * Run the migrations.
+            *
+            * @return void
+            */
+            public function up()
+            {
+                Schema::create('tests', function (Blueprint $table) {
+                    $table->id();
+                    $table->timestamps();
+                });
+            }
+
+            /**
+            * Reverse the migrations.
+            *
+            * @return void
+            */
+            public function down()
+            {
+                Schema::dropIfExists('tests');
+            }
+        };
+
+        ```
+
+        - ここのmigrationsファイルなど直してDB修正したりしたり、
+            - https://readouble.com/laravel/11.x/ja/migrations.html#column-method-text　←カラムの一覧
+        - 「php artisan migrate:fresh」// テーブル全削除し再生成
+        - 「php artisan migrate:refresh」// ロールバックして再生成
+
+- tinker
+    - コマンド入力でデータ保存、閲覧できる
+    - DBの変更した時に、内容確認をさらっとしたりするために便利
+    - 「php artisan tinker」
+    - tinkerコマンドで対話型のコマンドライン開始して、phpソース書いていく感じ。Django shellと同じ感じだね！
+    - インサートされてるかとかすっと確認できるね
+    ```php
+    php artisan tinker
+    Psy Shell v0.12.7 (PHP 8.3.14 — cli) by Justin Hileman
+    > $test = new App\Models\Test;　　← ここで気づいたが、インスタンス化時にクラスメイに（）がphpではいらない
+    = App\Models\Test {#5054}
+
+    > $test->text ="aaa";　← プロパティ？には単にtextって感じでアクセス
+    = "aaa"
+
+    > $test->save();
+    = true
+
+    > App≠Models≠Test::all();
+
+    Error  Class "App≠Models≠Test" not found.
+
+    > App\Models\Test::all();
+    = Illuminate\Database\Eloquent\Collection {#5884
+        all: [
+        App\Models\Test {#5067
+            id: 1,
+            text: "aaa",
+            created_at: "2025-03-01 23:46:51",
+            updated_at: "2025-03-01 23:46:51",
+        },
+        ],
+    }
+    ```
+
+- コントローラ
+    - コントローラファイルには後ろにControllerとつけるのが一般的
+    - 「php artisan make:controller TestController」　ってコマンドでコントローラファイルを作成できる
+    - すると "app/Http/COntrollers" 配下にコントローラファイルができる
+
+    ```php
+    <?php
+
+        namespace App\Http\Controllers;
+
+        use Illuminate\Http\Request;
+
+        class TestController extends Controller
+        {
+            //
+        }
+    ```
+
+- MVCモデルの記述１
+    - ルートをまず書く
+        - routes/web.php
+        - まずuse文で使うコントローラを書いてそのファイル内で使えるようにする
+        - 次にRoute::get()で第一引数でブラウザで打つurlを書く。第２引数には第一引数に書いたURLを叩いたら、呼ばれるコントローラとその中のメソッドにアクセスしてねって記述書く
+        - コントローラではreturnで、view()というヘルパー関数を使い、view(test.test)って感じで「フォルダ名.ファイル名」と引数を書く
+        - return view("tests.test")をコントローラで返すと　←testsフォルダ内のtestファイル
+        - resources/views/tests/test.blade.php のviewファイルが呼ばれる　//ファイル名.blade.phpとかく
+        - viewファイル名は.bladeを入れないと認識してくれないので注意
+
+        - web.php
+        ```php
+        <?php
+
+        use Illuminate\Support\Facades\Route;
+        use App\Http\Controllers\TestController;
+        /*
+        |--------------------------------------------------------------------------
+        | Web Routes
+        |--------------------------------------------------------------------------
+        |
+        | Here is where you can register web routes for your application. These
+        | routes are loaded by the RouteServiceProvider within a group which
+        | contains the "web" middleware group. Now create something great!
+        |
+        */
+
+        Route::get('/', function () {
+            return view('welcome');
+        });
+        Route::get('tests/test', [TestController::class, 'index']); // 新規追加 TestControllerクラスのindexメソッドを呼ぶ
+        ```
+
+        - TestController.php
+        ```php
+        <?php
+
+        namespace App\Http\Controllers;
+
+        use Illuminate\Http\Request;
+
+        class TestController extends Controller
+        {
+            public function index(){
+                return view('tests.test');
+            }
+        }
+        ```
+
+        - そんでresoureces/viewの下にtest/test.blade.php　のディレクトリとファイルを作ってアクセスすれば表示される！！
+
+- MVCモデルの記述２
+    - TestControllerで use App\Models\Test として、モデルクラスを読み込む。
+    - TestControllerを以下のように修正
+    - use App\Models\Test;　で使うモデルを引っ張る
+    - compactで変数をview側に渡す
+    ```php
+    <?php
+
+        namespace App\Http\Controllers;
+
+        use Illuminate\Http\Request;
+        use App\Models\Test;
+
+
+        class TestController extends Controller
+        {
+            public function index(){
+
+                $values = Test::all();
+                // dd($values);// 祖より止めて内容を確認できる die+var_dump
+                return view('tests.test', compact('values'));// compactで変数をview側に渡す
+            }
+        }
+    ```
+    - test.blade.phpに以下を記載。
+    ```php
+    test
+
+    @foreach($values as $value)
+    {{ $value->id}}<br>
+    {{ $value->text}}<br>
+    @endforeach
+    ```
+
+- ヘルパー関数
+    - Laravel側で用意している関数
+    - よく使うやつら
+    - route, to_route, url, auth, app, bcrypt, collect, dd, env, config, redirect, factory, old, view, withなどなど
+    - これらで効率的に開発ができる
+
+- エロくアントとコレクション
+    - DBから情報を引っ張ってくる方法は大きく2つある。
+    - Eloquntで取得すると$testsはコレクション型になっている（配列を拡張したものでLaravel独自のもの）
+    - なのでこの書き方の時は:all()とか他のメソッドを探すときは以下のドキュメントのページ見ること
+    - https://readouble.com/laravel/9.x/ja/collections.html
+
+    - ちなみにget()とall()を使った場合はコレクション型になり、それ以外のメソッドは別の型になることも多いのでそこは気をつける
+    1.Eloquent(エロクアント) これさっき描いてたやつ
+    ues App\Models\Test;　　// モデル名::メソッド
+    $tests = Test::all()l
+    dd($tests);　// Eloquntで取得すると$testsはコレクション型になっている（配列を拡張したものでLaravel独自のもの）
+    
+    - Laravel慣れないうちは、dd()をかけて、データ型がどうなっているか、確認する。
+
+
+
+    2.クエリビルダ DBからスタートする書き方
+        - select where groupbyなどSQLに近い構文出かける
+        - rawで生のSQLもかける
+        - get()やfirst()で「確定」することで返り血がコレクションになってくれて、
+        - 確定しないとQueryBUilder型になってしまう
+        - まずuse Illuminate\Support\Facades\DB;　でファサードを引用。これはお決まりのお作法的なやつ
+        - すると、　DB::table('tests')->get(); //DBファサード　でかけるようになる
+
+        ```php
+            // クエリビルダ
+            DB::table('tests')->where('text','=','aaa')->select('id','text')->get();
+            dd($values, $count, $first, $whereaaa);
+            return view('tests.test', compact('values'));// compactで変数をview側に渡す
+        ```
+        
+        - 多少クエリビルダが早いが、基本的にエロくアントを使う方がメリットが多いのでおすすめ
+
+- ファサード
+    - フランス語で「正面入り口」
+    - 　クエリビルだ実装時にコントローラクラスにて「use Illuminate\Support\Facades\DB;」と描いたが、これはファサードであり以下のパスに定義されている
+    - /Applications/MAMP/htdocs/laravel/task_test/vendor/laravel/framework/src/Illuminate/Support/Facades/Facade.php
+
+- 起動処理DIとサービスコンテナ
+    - 
+- ブレード
+    - https://readouble.com/laravel/9.x/ja/blade.html
+    - マスタッシュ= 口髭
+
+- クライアントーサーバさいど
+    - 以下ニーズをそれぞれの側が求め続けて行った結果いろんなツールにゃフレームワークが登場しカオスな状態になっている
+        - クライアント側→使いやすい、表示が早い
+        - 作りやすい、管理しやすい
+    - html
+        - pug　という省略した書き方
+    - css
+        - sass
+        - bootstrap
+        - tailwind
+    - js
+        - vue
+        - react
+    - css loader
+        - sass やbootstrapなどの新しい書き方を古い書き方にする
+    - babel
+        - vue,reactなどの新しい書き方をjsの書き方にする
+    
+    - バンドル（bundle） cssやjsのファイルが増えるほど読み込みに時間がかかるので、複数ファイルを1つにガッちゃんこして。読み込み早くする
+        - Vite(ヴィート)
+
+- 認証（Viteとlaravel Breeze）
+    - ログイン、ユーザ登録、パスワードのリセット、メール検証、パスワード確認ができる
+    - 「composer require laravel/breeze:^1.13 --dev」でインストール
+    - 「php artisan breeze:install」を実行
+        - compser.json追記
+        - App\Models\User.php追記
+        - resources\css\app.css追記
+        - resources\css\app.js追記
+
+        - App\View\Components ファイル追加
+        - resources\view\auth　ファイル追加
+        - resources\view\components　ファイル追加
+        - resources\view\layouts　ファイル追加
+        - resources\view\dashboard.blade.php　ファイル追加
+    - お馴染みのcomposer.jsonに追記される　ファイル追加
+
+    - npm install // プロジェクトにnpm installする。　←ここでアクセスエラー出たので sudo npm installってしたらいけた
+    - npm run dev //開発サーバ起動
+    - npm run build 本番ようにファイル出力
+
+    - 「php artisan route:list」でルートの一覧を表示する
+
+
+
+## LaravelプロジェクトDocker起動
+- composer require laravel/sail --dev
+    - laravel/sailをインストール
+- php artisan sail:install
+    - この時
+
+- ./vendor/bin/sail up
+    - docker compose upと同じ意味
+    - sail upコマンド実行時に以下のエラーが出た。
+    - https://qiita.com/ts_77/items/1e81e575406bf2f904ba 　　　のサイトを参考に、指定のパスをマウントできるようdokka-desukutopにてパス登録する。
+    ```php
+    ./vendor/bin/sail up
+
+    [+] Running 4/4
+    ✔ Network task_test_sail              Created                                                                                                                                0.0s
+    ✔ Volume "task_test_sail-mysql"       Created                                                                                                                                0.0s
+    ✔ Container task_test-mysql-1         Created                                                                                                                                0.1s
+    ✔ Container task_test-laravel.test-1  Created                                                                                                                                0.0s
+    Attaching to laravel.test-1, mysql-1
+    Gracefully stopping... (press Ctrl+C again to force)
+    Error response from daemon: Mounts denied:
+    The path /Applications/MAMP/htdocs/laravel/task_test/vendor/laravel/sail/database/mysql/create-testing-database.sh is not shared from the host and is not known to Docker.
+    You can configure shared paths from Docker -> Preferences... -> Resources -> File Sharing.
+    See https://docs.docker.com/desktop/settings/mac/#file-sharing for more info.
+    ```
