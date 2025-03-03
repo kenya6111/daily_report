@@ -860,3 +860,274 @@ props という名前は、「properties（プロパティ）」の略 です。
 親コンポーネントから子コンポーネントへ渡す	データを一方向に流す（トップダウン）。
 変更できない（読み取り専用）	props は子コンポーネントの中では変更できない。
 関数やオブジェクトも渡せる	文字列だけじゃなく、関数や配列も渡せる。
+
+
+- React では setState で配列を更新するときは、スプレッド構文 ... でコピーを作るのが基本！
+
+- 新たにGameというトップレベルコンポーネントを作った。
+```html
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <title>Hello World</title>
+    <link rel="stylesheet" href="./style.css">
+    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+
+    <!-- Don't use this in production: -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+</head>
+<body>
+    <div id="root"></div>
+    <script type="text/babel">
+    function calculateWinner(squares) {
+        const lines = [
+            [0, 1, 2],
+            [3, 4, 5],
+            [6, 7, 8],
+            [0, 3, 6],
+            [1, 4, 7],
+            [2, 5, 8],
+            [0, 4, 8],
+            [2, 4, 6]
+        ];
+        for (let i = 0; i < lines.length; i++) {
+            const [a, b, c] = lines[i];
+            if (squares[a] && squares[a] === squares[b] && squares[a] === squares[c]) {
+            return squares[a];
+            }
+        }
+        return null;
+    }
+
+    function Square({value, onSquareClick}) {
+        return <button className="square" onClick={onSquareClick}>{value}</button>;
+    }
+
+    function Board({ xIsNext, squares, onPlay }) {
+        function handleClick(i){
+            if(squares[i] || calculateWinner(squares)){
+                return;
+            }
+
+            const nextSquares = squares.slice();
+            if(xIsNext){
+                nextSquares[i] = "x"
+            }else{
+                nextSquares[i] = "⚪︎"
+            }
+            onPlay(nextSquares);
+        }
+
+        const winner = calculateWinner(squares);
+        let status;
+        if (winner) {
+            status = "Winner: " + winner;
+        } else {
+            status = "Next player: " + (xIsNext ? "X" : "O");
+        }
+        return (
+            <>
+            <div className="status">{status}</div>
+            <div className="board-row">
+                <Square value={squares[0]} onSquareClick={() => handleClick(0)} />
+                <Square value={squares[1]} onSquareClick={() => handleClick(1)} />
+                <Square value={squares[2]} onSquareClick={() => handleClick(2)} />
+            </div>
+            <div className="board-row">
+                <Square value={squares[3]} onSquareClick={() => handleClick(3)} />
+                <Square value={squares[4]} onSquareClick={() => handleClick(4)} />
+                <Square value={squares[5]} onSquareClick={() => handleClick(5)} />
+            </div>
+            <div className="board-row">
+                <Square value={squares[6]} onSquareClick={() => handleClick(6)} />
+                <Square value={squares[7]} onSquareClick={() => handleClick(7)} />
+                <Square value={squares[8]} onSquareClick={() => handleClick(8)} />
+            </div>
+            </>
+        );
+    }
+
+    function Game(){
+        const [xIsNext, setXIsNext] = React.useState(true);
+        const [history, setHistory] = React.useState([Array(9).fill(null)]);
+        const currentSquares = history[history.length - 1];
+
+        function handlePlay(nextSquares) {
+            setHistory([...history, nextSquares]);
+            console.log(history)
+            setXIsNext(!xIsNext);
+        }
+        return (
+            <div className="game">
+            <div className="game-board">
+                <Board  xIsNext={xIsNext} squares={currentSquares} onPlay={handlePlay}/>
+            </div>
+            <div className="game-info">
+                <ol>{/*TODO*/}</ol>
+            </div>
+            </div>
+        );
+
+    }
+    const container = document.getElementById('root');
+    const root = ReactDOM.createRoot(container);
+    root.render(<Game />);
+    </script>
+</body>
+</html>
+```
+
+- mapの使い方。
+```js
+const array = [1,2,3,4,5]
+const map1 = array.map((val)=>val*2)
+const map2 = array.map((val)=>{val*2})// 失敗例。returnし忘れてる。ブロック内に return がないと、undefined を返す。
+                                      // map() で {} を使う場合は、return を書くのを忘れない！
+const map3 = array.map((val)=>{
+  return val*2})
+console.log(map1)
+console.log(map2)
+console.log(map3)
+```
+
+
+
+- 完成版
+```html
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <title>Hello World</title>
+    <link rel="stylesheet" href="./style.css">
+    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+
+    <!-- Don't use this in production: -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+</head>
+<body>
+    <div id="root"></div>
+    <script type="text/babel">
+    function calculateWinner(squares) {
+        const lines = [
+            [0, 1, 2],
+            [3, 4, 5],
+            [6, 7, 8],
+            [0, 3, 6],
+            [1, 4, 7],
+            [2, 5, 8],
+            [0, 4, 8],
+            [2, 4, 6]
+        ];
+        for (let i = 0; i < lines.length; i++) {
+            const [a, b, c] = lines[i];
+            if (squares[a] && squares[a] === squares[b] && squares[a] === squares[c]) {
+            return squares[a];
+            }
+        }
+        return null;
+    }
+
+    function Square({value, onSquareClick}) {
+        return <button className="square" onClick={onSquareClick}>{value}</button>;
+    }
+
+    function Board({ xIsNext, squares, onPlay }) {
+        function handleClick(i){
+            if(squares[i] || calculateWinner(squares)){
+                return;
+            }
+
+            const nextSquares = squares.slice();
+            if(xIsNext){
+                nextSquares[i] = "x"
+            }else{
+                nextSquares[i] = "⚪︎"
+            }
+            onPlay(nextSquares);
+        }
+
+        const winner = calculateWinner(squares);
+        let status;
+        if (winner) {
+            status = "Winner: " + winner;
+        } else {
+            status = "Next player: " + (xIsNext ? "X" : "O");
+        }
+        return (
+            <>
+            <div className="status">{status}</div>
+            <div className="board-row">
+                <Square value={squares[0]} onSquareClick={() => handleClick(0)} />
+                <Square value={squares[1]} onSquareClick={() => handleClick(1)} />
+                <Square value={squares[2]} onSquareClick={() => handleClick(2)} />
+            </div>
+            <div className="board-row">
+                <Square value={squares[3]} onSquareClick={() => handleClick(3)} />
+                <Square value={squares[4]} onSquareClick={() => handleClick(4)} />
+                <Square value={squares[5]} onSquareClick={() => handleClick(5)} />
+            </div>
+            <div className="board-row">
+                <Square value={squares[6]} onSquareClick={() => handleClick(6)} />
+                <Square value={squares[7]} onSquareClick={() => handleClick(7)} />
+                <Square value={squares[8]} onSquareClick={() => handleClick(8)} />
+            </div>
+            </>
+        );
+    }
+
+    function Game(){
+        const [xIsNext, setXIsNext] = React.useState(true);
+        const [history, setHistory] = React.useState([Array(9).fill(null)]);
+        const [currentMove, setCurrentMove] = React.useState(0);// ユーザーが現在どのステップを表示しているか
+        const currentSquares = history[currentMove];
+
+        function handlePlay(nextSquares) {
+            // setHistory([...history, nextSquares]);
+            // console.log(history)
+            const nextHistory = [...history.slice(0, currentMove + 1), nextSquares];
+            setHistory(nextHistory);
+            setCurrentMove(nextHistory.length - 1);
+            setXIsNext(!xIsNext);
+        }
+        function jumpTo(nextMove) {
+            setCurrentMove(nextMove);
+            setXIsNext(nextMove % 2 === 0);
+        }
+
+        const moves = history.map((squares, move) => {
+            let description;
+            if (move > 0) {
+            description = 'Go to move #' + move;
+            } else {
+            description = 'Go to game start';
+            }
+            return (
+            <li key={move}>
+                <button onClick={() => jumpTo(move)}>{description}</button>
+            </li>
+            );
+        });
+
+        return (
+            <div className="game">
+            <div className="game-board">
+                <Board  xIsNext={xIsNext} squares={currentSquares} onPlay={handlePlay}/>
+            </div>
+            <div className="game-info">
+                <ol>{moves}</ol>
+            </div>
+            </div>
+        );
+
+    }
+    const container = document.getElementById('root');
+    const root = ReactDOM.createRoot(container);
+    root.render(<Game />);
+    </script>
+</body>
+</html>
+```
