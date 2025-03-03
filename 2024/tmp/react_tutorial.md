@@ -355,6 +355,8 @@
     ```
     ![alt text](../../image/image4.png)
 
+
+
 ## チュートリアル : 三目並べ
 
 - コンポネントタグに属性みたいに引数をかける value="0"とかで渡して子コンポーネントで受け取る
@@ -537,3 +539,324 @@
 </body>
 </html>
 ```
+
+- 親コンポーネントで共有状態を宣言します。
+- 親コンポーネントは、その状態を props を介して子に渡す
+- React コンポーネントをリファクタリングするときに、状態を親コンポーネントに持ち上げることはよくあります。
+```html
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <title>Hello World</title>
+    <link rel="stylesheet" href="./style.css">
+    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+
+    <!-- Don't use this in production: -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+</head>
+<body>
+    <div id="root"></div>
+    <script type="text/babel">
+
+    function Square({value,onSquareClick}) {
+        return <button className="square" onClick={onSquareClick}>{value}</button>;
+    }
+
+    function MyApp() {
+        const [squares, setSquares] = React.useState(Array(9).fill(null));// 親コンポネントに状態を上げる
+        function handleClick(i){
+            const nextSquares = squares.slice();
+            nextSquares[i] = "x"
+            setSquares(nextSquares)
+        }
+        return (
+            <>
+            <div className="board-row">
+                <Square value={squares[0] onSquareClick={ ()=>{handleClick(0)} }}/>
+                <Square value={squares[1]}/>
+                <Square value={squares[2]}/>
+            </div>
+            <div className="board-row">
+                <Square value={squares[3]}/>
+                <Square value={squares[4]}/>
+                <Square value={squares[5]}/>
+            </div>
+            <div className="board-row">
+                <Square value={squares[6]}/>
+                <Square value={squares[7]}/>
+                <Square value={squares[8]}/>
+            </div>
+            </>
+        );
+    }
+    const container = document.getElementById('root');
+    const root = ReactDOM.createRoot(container);
+    root.render(<MyApp />);
+    </script>
+</body>
+</html>
+```
+
+
+- 以下のソースで任意のマスをクリック時に「✖︎」をつけれるようになtった。
+- 親コンポーネント側では渡す引数（prop）てか属性？は受け取る時と同じ名前にする
+```html
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <title>Hello World</title>
+    <link rel="stylesheet" href="./style.css">
+    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+
+    <!-- Don't use this in production: -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+</head>
+<body>
+    <div id="root"></div>
+    <script type="text/babel">
+
+    function Square({value, onSquareClick}) {// 追加
+        return <button className="square" onClick={onSquareClick}>{value}</button>;// 追加
+    }
+
+    function MyApp() {
+        const [squares, setSquares] = React.useState(Array(9).fill(null));// 親コンポネントに状態を上げる// 追加
+        function handleClick(i){// 追加
+            const nextSquares = squares.slice();
+            nextSquares[i] = "x"
+            setSquares(nextSquares)
+        }
+        return (
+            <>
+            <div className="board-row">
+                <Square value={squares[0]} onSquareClick={() => handleClick(0)} />// 追加
+                <Square value={squares[1]} onSquareClick={() => handleClick(1)} />
+                <Square value={squares[2]} onSquareClick={() => handleClick(2)} />
+            </div>
+            <div className="board-row">
+                <Square value={squares[3]} onSquareClick={() => handleClick(3)} />
+                <Square value={squares[4]} onSquareClick={() => handleClick(4)} />
+                <Square value={squares[5]} onSquareClick={() => handleClick(5)} />
+            </div>
+            <div className="board-row">
+                <Square value={squares[6]} onSquareClick={() => handleClick(6)} />
+                <Square value={squares[7]} onSquareClick={() => handleClick(7)} />
+                <Square value={squares[8]} onSquareClick={() => handleClick(8)} />
+            </div>
+            </>
+        );
+    }
+    const container = document.getElementById('root');
+    const root = ReactDOM.createRoot(container);
+    root.render(<MyApp />);
+    </script>
+</body>
+</html>
+```
+
+- ✅ なぜ slice() を使うのか？
+    - React では、useState で管理している 状態（state）を直接変更してはいけない というルールがあります。
+    - 例えば、もし squares[i] = "x" を直接変更すると：
+
+    ```js
+        squares[i] = "x"; // ❌ 直接変更 → Reactが変更を検知しない！
+        setSquares(squares); // ❌ 直接変更しただけではうまく動かない
+    ```
+    - React が「状態が変わった」と認識しないため、再レンダリングされない！バグの原因になる！
+    - → これを防ぐために、配列のコピーを作成してから更新する。
+
+- ✅ slice() の役割
+    - slice() を使うと、元の squares を変更せずに 新しい配列を作れる。
+    - 直接部分を修正するのではなく、新たな入れ物用意してそこに修正部分含めた全部を入れ直して、丸ごと入れ替える感じ
+
+    ```js
+        const nextSquares = squares.slice();
+    ```
+    - その後、新しい配列 nextSquares に "x" を入れて、React に新しい配列を渡す：
+
+    ```js
+        nextSquares[i] = "x";
+        setSquares(nextSquares);
+    ```
+    これで React は「状態が変わった！」と認識し、画面を更新 してくれる。
+
+
+
+- これで交互に⚪︎と✖︎をますに打てるようになった。
+```html
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <title>Hello World</title>
+    <link rel="stylesheet" href="./style.css">
+    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+
+    <!-- Don't use this in production: -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+</head>
+<body>
+    <div id="root"></div>
+    <script type="text/babel">
+
+    function Square({value, onSquareClick}) {
+        return <button className="square" onClick={onSquareClick}>{value}</button>;
+    }
+
+    function MyApp() {
+        const [xIsNext, setXIsNext] = React.useState(true);// 親コンポネントに状態を上げる
+        const [squares, setSquares] = React.useState(Array(9).fill(null));// 親コンポネントに状態を上げる
+        function handleClick(i){
+            if(squares[i]){
+                return;
+            }
+            const nextSquares = squares.slice();
+            if(xIsNext){
+                nextSquares[i] = "x"
+            }else{
+                nextSquares[i] = "⚪︎"
+            }
+            setSquares(nextSquares)
+            setXIsNext(!xIsNext)
+        }
+        return (
+            <>
+            <div className="board-row">
+                <Square value={squares[0]} onSquareClick={() => handleClick(0)} />
+                <Square value={squares[1]} onSquareClick={() => handleClick(1)} />
+                <Square value={squares[2]} onSquareClick={() => handleClick(2)} />
+            </div>
+            <div className="board-row">
+                <Square value={squares[3]} onSquareClick={() => handleClick(3)} />
+                <Square value={squares[4]} onSquareClick={() => handleClick(4)} />
+                <Square value={squares[5]} onSquareClick={() => handleClick(5)} />
+            </div>
+            <div className="board-row">
+                <Square value={squares[6]} onSquareClick={() => handleClick(6)} />
+                <Square value={squares[7]} onSquareClick={() => handleClick(7)} />
+                <Square value={squares[8]} onSquareClick={() => handleClick(8)} />
+            </div>
+            </>
+        );
+    }
+    const container = document.getElementById('root');
+    const root = ReactDOM.createRoot(container);
+    root.render(<MyApp />);
+    </script>
+</body>
+</html>
+```
+
+- calculateWinnerで勝者の判定をする
+- calculateWinnerで返り値の値があれば、勝負ついてるのでそこでreturnして終わり
+- useStateの値が書き変わると、Reactはサイレンダリングされる。よってクリックするごとにstatusの判定が毎回走る
+```html
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <title>Hello World</title>
+    <link rel="stylesheet" href="./style.css">
+    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+
+    <!-- Don't use this in production: -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+</head>
+<body>
+    <div id="root"></div>
+    <script type="text/babel">
+        function calculateWinner(squares) {// 追加
+            const lines = [
+                [0, 1, 2],
+                [3, 4, 5],
+                [6, 7, 8],
+                [0, 3, 6],
+                [1, 4, 7],
+                [2, 5, 8],
+                [0, 4, 8],
+                [2, 4, 6]
+            ];
+            for (let i = 0; i < lines.length; i++) {
+                const [a, b, c] = lines[i];
+                if (squares[a] && squares[a] === squares[b] && squares[a] === squares[c]) {
+                return squares[a];
+                }
+            }
+            return null;
+        }
+
+    function Square({value, onSquareClick}) {
+        return <button className="square" onClick={onSquareClick}>{value}</button>;
+    }
+
+    function MyApp() {
+        const [xIsNext, setXIsNext] = React.useState(true);// 親コンポネントに状態を上げる
+        const [squares, setSquares] = React.useState(Array(9).fill(null));// 親コンポネントに状態を上げる
+        function handleClick(i){
+            if(squares[i] || calculateWinner(squares)){// 追加
+                return;
+            }
+
+            const nextSquares = squares.slice();
+            if(xIsNext){
+                nextSquares[i] = "x"
+            }else{
+                nextSquares[i] = "⚪︎"
+            }
+            setSquares(nextSquares)
+            setXIsNext(!xIsNext)
+        }
+        const winner = calculateWinner(squares);// 追加
+        let status;// 追加
+        if (winner) {// 追加
+            status = "Winner: " + winner;// 追加
+        } else {// 追加
+            status = "Next player: " + (xIsNext ? "X" : "O");// 追加
+        }// 追加
+        return (
+            <>
+            <div className="status">{status}</div>// 追加
+            <div className="board-row">
+                <Square value={squares[0]} onSquareClick={() => handleClick(0)} />
+                <Square value={squares[1]} onSquareClick={() => handleClick(1)} />
+                <Square value={squares[2]} onSquareClick={() => handleClick(2)} />
+            </div>
+            <div className="board-row">
+                <Square value={squares[3]} onSquareClick={() => handleClick(3)} />
+                <Square value={squares[4]} onSquareClick={() => handleClick(4)} />
+                <Square value={squares[5]} onSquareClick={() => handleClick(5)} />
+            </div>
+            <div className="board-row">
+                <Square value={squares[6]} onSquareClick={() => handleClick(6)} />
+                <Square value={squares[7]} onSquareClick={() => handleClick(7)} />
+                <Square value={squares[8]} onSquareClick={() => handleClick(8)} />
+            </div>
+            </>
+        );
+    }
+    const container = document.getElementById('root');
+    const root = ReactDOM.createRoot(container);
+    root.render(<MyApp />);
+    </script>
+</body>
+</html>
+```
+- 🚀 クリックするたびに status の計算が走る理由
+クリックするたびに status の計算 (calculateWinner(squares)) が走るのは、React の「再レンダリング」の仕組みのせい です。
+
+- ✅ React の再レンダリングとは？
+React では、useState を使って状態 (state) を更新すると コンポーネント全体が再レンダリング（再描画）される 仕組みになっています。
+
+✅ props とは？
+親コンポーネントが、子コンポーネントにデータを渡す仕組み のこと。
+props という名前は、「properties（プロパティ）」の略 です。
+英語の "properties" は「特性」や「属性」という意味。
+親コンポーネントから子コンポーネントへ渡す	データを一方向に流す（トップダウン）。
+変更できない（読み取り専用）	props は子コンポーネントの中では変更できない。
+関数やオブジェクトも渡せる	文字列だけじゃなく、関数や配列も渡せる。
