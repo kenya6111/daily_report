@@ -180,3 +180,220 @@
 
   - 子要素を削除
   removeChild
+
+## 6章
+
+- とりあえず以下で画面に「こんにちは」」と表示される
+```js
+  import { StrictMode, strictMode } from "react";
+  import { createRoot } from "react-dom/client";
+
+  const rootElement = document.getElementById("root");
+  const root = createRoot(rootElement);
+
+  root.render(
+    <StrictMode> // strictモードで開発。基本これを使うことが推奨されている
+      <h1>こんにちは</h1>;
+    </StrictMode>
+  );
+
+```
+
+- 以下のように関数の中で表示したい内容をreturnして結果を表示するというやり方がJSX
+```js
+import { StrictMode, strictMode } from "react";
+import { createRoot } from "react-dom/client";
+
+const rootElement = document.getElementById("root");
+const root = createRoot(rootElement);
+
+const App = () => {
+
+  return (
+    <h1>!!!!</h1>
+  )
+  
+};
+
+root.render(
+  <StrictMode>
+    <App/>
+  </StrictMode>
+);
+
+```
+
+- JSXのreturnは1つの要素として返すこと  
+import { StrictMode, strictMode } from "react";
+import { createRoot } from "react-dom/client";
+
+const rootElement = document.getElementById("root");
+const root = createRoot(rootElement);
+
+const App = () => {
+  return (
+    <>
+      <h1>!!!!</h1>
+      <h1>!!!!</h1>
+    </>
+  );
+};
+
+root.render(
+  <StrictMode>
+    <App />
+  </StrictMode>
+);
+
+
+- 関数単位でコンポーネントを定義していくと良い。
+- 別ファイルでexportされた関数を読み込むときは、基本パスを書くことはなくて、コンポーネントタグを書いたときに自動でおパスを書く仕組みがあるのでそれ使う
+- .jsxファイルは「Reactのコンポーネント用の拡張子」
+  - プロジェクトによって異なるが、ファイルの拡張子を見ただけでコンポーネントかどうか、が一発でわかるので推奨
+  - ファイルのアイコンも変わるし、ｊsx用の保管などもあるのでリアクトのコンポーネントを書くのであればjsxの拡張子にするのがおすすめ
+- Reactのコンポーネント名は大文字始まりだが、ファイル名は小文字始まりでも良い
+- reactでは属性名はキャメルケースで書く
+- jsxの中でｊｓを書いていくよ〜って意味を表すのが「{}」
+  - 以下のように「」
+  ```js
+  export const App = () => {
+    return (
+      <>
+        <h1>!!!!</h1>
+        <h1>!!!!</h1>
+        {console.log(1111)}
+        <button onClick={() => alert(111)}>ボタン</button>
+      </>
+    );
+  };
+  ```
+
+  - ただ毎回「onClick={() => alert(111)}」のように{}内にゴリゴリ処理書いてると可読性低いので、外に切り出してあげると良い
+  ```jsx
+  export const App = () => {
+    function onClickButton() {
+      alert(111);
+    }
+    return (
+      <>
+        <h1>!!!!</h1>
+        <h1>!!!!</h1>
+        <p>{console.log(1111)}</p>
+        <button onClick={onClickButton}>ボタン</button>
+      </>
+    );
+  };
+  ```
+
+  - styleを当てる時はオブジェクトでスタイルを定義するルール
+     - jsのオブジェクトでスタイルは定義する。なので一見二重カッコで描いてるようにも見える
+     - 本来のｃｓｓでは「font-size」と書くが、jsnおオブジェクトではハイフンは許容してないので、キャメルケースで書くのがreactルール
+     - 数値のものはそのまま書く
+  ```jsx
+  export const App = () => {
+    function onClickButton() {
+      alert(111);
+    }
+
+    const contenetStyle = {
+      color: "red",
+      fontSize: "22px",
+      margin: 100,
+    };
+    return (
+      <>
+        <h1 style={{ color: "blue" }}>こんにちは</h1>
+        <h1 style={contenetStyle}>こんにちは</h1>
+        <h1>!!!!</h1>
+        <h1>!!!!</h1>
+        <p>{console.log(1111)}</p>
+        <button onClick={onClickButton}>ボタン</button>
+      </>
+    );
+  };
+
+  ```
+- Props
+  - コンポーネントに渡す引数のようなもの
+  - いろんな条件によってそのコンポーネントの振る舞いはもちろん変わるので、そこをpropsで異なる変数を渡す。振る舞いごとにコンポーネントを作るのではなく状態を渡して変化させる
+  - App2.jsx
+  ```jsx
+  import { ColorfulMessage } from "./components/ColorfulMessage";
+
+  export const App2 = () => {
+    function onClickButton() {
+      alert(111);
+    }
+
+    const contenetStyle = {
+      color: "red",
+      fontSize: "22px",
+      margin: 100,
+    };
+    return (
+      <>
+        <h1 style={{ color: "red" }}>こんにちは</h1>
+        <ColorfulMessage color="blue" message="お元気ですか" />
+      </>
+    );
+  };
+
+  ```
+
+  - ColorfulMessage.jsx
+    - コンポーネントへの引数はまとめてpropsで受け取れる。この時受け取る引数を{}で囲わなくていい。（1つ1つの引数を明示する時はオブジェクトで引数を囲う）
+    - propsももちろんjsオブジェクトなので{props.message}って感じで書く
+  ```jsx
+  export const ColorfulMessage = (props) => {
+    console.log(props.color);
+    const contenetStyle = {
+      color: props.color,
+      fontSize: "19px",
+    };
+    return <h1 style={contenetStyle}>{props.message}</h1>;
+  };
+  ```
+
+  - コンポーネントタグの中身をコンポーネント内で受け取る
+  - App2.jsx
+  ```jsx
+  import { ColorfulMessage } from "./components/ColorfulMessage";
+
+  export const App2 = () => {
+    function onClickButton() {
+      alert(111);
+    }
+
+    const contenetStyle = {
+      color: "red",
+      fontSize: "22px",
+      margin: 100,
+    };
+    return (
+      <>
+        <h1 style={{ color: "red" }}>こんにちは</h1>
+        <ColorfulMessage color="blue" message="お元気ですか" />
+        <ColorfulMessage color="blue" message="お元気ですか！！！！！" />
+        <ColorfulMessage
+          color="blue"
+          message="お元気ですか！！！！！？？？？？"
+        />
+        <ColorfulMessage color="blue" message="お元気ですか">
+          チルドレン要素
+        </ColorfulMessage>
+      </>
+    );
+  };
+  ```
+
+  - 
+    ```jsx
+    export const ColorfulMessage = (props) => {
+      console.log(props.color);
+      const contenetStyle = {
+        color: props.color,
+        fontSize: "19px",
+      };
+      return <h1 style={contenetStyle}>{props.children}</h1>;
+    };
+    ```
