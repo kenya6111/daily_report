@@ -316,9 +316,9 @@
 ## 5章(ルーティングの基礎)
 
 - 基本的に画面遷移
-  - BrawserrouterDomタグで囲った配下でルーHTイングを有効にする
-  - Linkタグでaタグっぽい実装ができる
-  - Routesタグでどのパスの場合にどんコンポーネントを出すかの設定をする
+  - BrawserrouterDomタグで囲った配下でルーHTイングが有効化される仕組み
+  - Linkタグがaタグっぽい実装をしている。(toはどのパスに飛ぶかって意味の実装)
+  - Routesタグでどのパスの場合にどのコンポーネントを出すかの設定をする
   ```jsx
   import { BrowserRouter, Link, Routes, Route } from "react-router-dom";
 
