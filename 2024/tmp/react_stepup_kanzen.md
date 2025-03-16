@@ -352,4 +352,404 @@
   ```
 
 - ネストされたページ遷移
-  - 
+  - ちなみにreact-router-dom:6.30.0を使用
+
+  - propsの渡し方、受け取り方
+    - 親側ではいつも通りタグに渡す変数を記載。
+    - 受け取るこコンポーネント側ではpropsで引数として受け取り、中身を参照して出力。
+    - App.js
+    ```js
+      import { BrowserRouter, Link, Routes, Route } from "react-router-dom";
+
+      import { Home } from "./Home";
+      import { Page1 } from "./Page1";
+      import { Page1DetailA } from "./Page1DetailA";
+      import { Page1DetailB } from "./Page1DetailB";
+      import { Page2 } from "./Page2";
+      import "./styles.css";
+
+      export default function App() {
+        const homeMessage = "Welcome to the Home Page!";
+        const page1Message = "Welcome to the page1Message Page!";←ここ！！！！！！
+        return (
+          <BrowserRouter>
+            <div className="App">
+              <Link to="/">Home</Link>
+              <br />
+              <Link to="/page1">Page1</Link>
+              <br />
+              <Link to="/page2">Page2</Link>
+            </div>
+
+            <Routes>
+              <Route path="/" element={<Home message={homeMessage} />} />
+              <Route path="/page1/*" element={<Page1 message={page1Message} />} />←ここ！！！！！！
+              <Route path="/page1/detailA" element={<Page1DetailA />} />
+              <Route path="/page1/detailB" element={<Page1DetailB />} />
+              <Route path="/page2/*" element={<Page2 />} />
+            </Routes>
+          </BrowserRouter>
+        );
+      }
+    ```
+
+    - Page1.jsx
+    ```jsx
+    import {
+      BrowserRouter,
+      Link,
+      Routes,
+      Route,
+      Outlet,
+      useParams,
+    } from "react-router-dom";
+    import { Page1DetailA } from "./Page1DetailA";
+    import { Page1DetailB } from "./Page1DetailB";
+    export const Page1 = (props) => {←ここ！！！！！！
+      return (
+        <div>
+          <h1>Page1ページです</h1>
+          <p>{props.message}</p>←ここ！！！！！！
+
+
+          <br />
+          <Link to="detailA" replace>
+            detailA
+          </Link>
+          <br />
+          <Link to="detailB" replace>
+            detailB
+          </Link>
+        </div>
+      );
+    };
+
+    ```
+
+  - Routes以下の切り出し、整理
+    - src/App.jsx
+    ```jsx
+    import { BrowserRouter, Link, Routes, Route } from "react-router-dom";
+    import { Router } from "./router/Router";
+
+    import "./styles.css";
+
+    export default function App() {
+      return (
+        <BrowserRouter>
+          <div className="App">
+            <Link to="/">Home</Link>
+            <br />
+            <Link to="/page1">Page1</Link>
+            <br />
+            <Link to="/page2">Page2</Link>
+          </div>
+          <Router />
+        </BrowserRouter>
+      );
+    }
+
+    ```
+    - src/router/Router.jsx
+    ```jsx
+    import { BrowserRouter, Link, Routes, Route } from "react-router-dom";
+
+    import { Home } from "../Home";
+    import { Page1 } from "../Page1";
+    import { Page1DetailA } from "../Page1DetailA";
+    import { Page1DetailB } from "../Page1DetailB";
+    import { Page2 } from "../Page2";
+    import { page1Routes } from "./Page1Routes";
+
+    export const Router = () => {
+      const homeMessage = "Welcome to the Home Page!";
+      const page1Message = "Welcome to the page1Message Page!";
+      return (
+        <Routes>
+          {page1Routes.map((route) => {
+            return (
+              <Route key={route.path} path={route.path} element={route.children} />
+            );
+          })}
+        </Routes>
+      );
+    };
+    ```
+
+    - src/router/Page1Routes.jsx
+    ```jsx
+    import { Home } from "../Home";
+    import { Page1 } from "../Page1";
+    import { Page1DetailA } from "../Page1DetailA";
+    import { Page1DetailB } from "../Page1DetailB";
+    import { Page2 } from "../Page2";
+
+    export const page1Routes = [
+      {
+        path: "",
+        children: <Home />,
+      },
+      {
+        path: "/page1",
+        children: <Page1 />,
+      },
+      {
+        path: "/page1/detailA",
+        children: <Page1DetailA />,
+      },
+      {
+        path: "/page1/detailB",
+        children: <Page1DetailB />,
+      },
+      {
+        path: "/page2",
+        children: <Page2 />,
+      },
+    ];
+    ```
+  - URLパラメータを使う
+    - 結論、パスに「:id」とかを入れるやつ。クエリパラメータとは違う
+    - 結局はファイルごとに分割してよみこんでるだけ。１ファイルで書こうと思えば全然書ける。
+    - Linkがaタグみたいな役割で、Routesがこのパスの時にこのコンポーネント表示しますよって設定するやつ
+    - いかでは「https://kjkymc.csb.app/page2/100」とかにアクセス時にパラメータ渡される
+    - src/router/Router.jsx
+    ```jsx
+    import { Routes, Route } from "react-router-dom";
+    import { page1Routes } from "./Page1Routes";
+    import { page2Routes } from "./Page2Routes";
+
+    export const Router = () => {
+      return (
+        <Routes>
+          {page1Routes.map((route) => {
+            return (
+              <Route key={route.path} path={route.path} element={route.children} />
+            );
+          })}
+          {page2Routes.map((route) => {
+            return (
+              <Route key={route.path} path={route.path} element={route.children} />
+            );
+          })}
+        </Routes>
+      );
+    };
+
+    ```
+
+    - src/router/Page2Routes.jsx
+    ```jsx
+    import { Page2 } from "../Page2";
+    import { UrlParameter } from "../UrlParameter";
+
+    export const page2Routes = [
+      {
+        path: "/page2",
+        children: <  />,
+      },
+      {
+        path: "/page2/:id", ←ここ！！
+        children: <UrlParameter />,
+      },
+    ];
+    ```
+
+    - src/UrlParameters.jsx
+    ```jsx
+    import { useParams } from "react-router-dom";
+    export const UrlParameter = () => {
+      const { id } = useParams();
+      return (
+        <div>
+          <h1>UrlParameterです</h1>
+          <p>パラメータは{id}です</p>
+        </div>
+      );
+    };
+    ```
+
+  - クエリパラメータを使う
+    - クエリパラメータの扱い方を記載。
+    - src/UrlParameter.jsx
+    ```jsx
+    import { useParams, useLocation } from "react-router-dom";
+    export const UrlParameter = () => {
+      const { id } = useParams();
+      const { search } = useLocation(); // クエリパラメータ取得できるやつ
+      const query = new URLSearchParams(search); // クエリパラメータを扱うための便利なメソッドを提供するやつ
+      console.log(search);
+      console.log(query);
+      return (
+        <div>
+          <h1>UrlParameterです</h1>
+          <p>パラメータは{id}です</p>
+          <p>パラメータは{query.get("name")}です</p> //←これ追加！！！！！！！！！！！！！！！！！！！！
+        </div>
+      );
+    };
+    ```
+  
+  - state
+    - コンポーネントの状態を渡したいなーってときは、タグのto属性の他、state属性をつけて
+    - 受け取るときはuseLocation()を使って受け取る
+    - src/Page1.jsx
+    ```jsx
+    import {
+      BrowserRouter,
+      Link,
+      Routes,
+      Route,
+      Outlet,
+      useParams,
+    } from "react-router-dom";
+    import { Page1DetailA } from "./Page1DetailA";
+    import { Page1DetailB } from "./Page1DetailB";
+    export const Page1 = (props) => {
+      const arr = [...Array(100).keys()];
+      return (
+        <div>
+          <h1>Page1ページです</h1>
+          <p>{props.message}</p>
+          <br />
+          <Link to="detailA">detailA</Link>
+          <br />
+          <Link to="detailB">detailB</Link>
+          <br />
+
+          <Link to="detailA" state={arr}> ←ここ追加！！！！！
+            detailA(state)
+          </Link>
+        </div>
+      );
+    };
+    ```
+
+    - src/Page1Detail.jsx
+    ```jsx
+    import { useLocation } from "react-router-dom";
+
+    export const Page1DetailA = () => {
+      const { state } = useLocation();←ここ追加！！！！！
+      console.log(state);←ここ追加！！！！！
+      return (
+        <div>
+          <h1>Page1DetailAです！</h1>
+        </div>
+      );
+    };
+    ```
+    
+  - useNavigate
+    - Linｋを使わずに、ｊｓから画面遷移する場合はこれ使う。
+    - 
+    ```jsx
+    import { BrowserRouter, Link, useNavigate } from "react-router-dom";
+    export const Page1 = (props) => {
+      const arr = [...Array(100).keys()];
+      const navigate = useNavigate();←ここ追加！！！！！
+      const onClickDetailA = () => navigate("detailA");←ここ追加！！！！！
+      return (
+        <div>
+          <h1>Page1ページです</h1>
+          <p>{props.message}</p>
+          <br />
+          <Link to="detailA">detailA</Link>
+          <br />
+          <Link to="detailB">detailB</Link>
+          <br />
+
+          <Link to="detailA" state={arr}>
+            detailA(state)
+          </Link>
+          <br />
+          <button onClick={onClickDetailA}>DetailA</button>←ここ追加！！！！！
+        </div>
+      );
+    };
+
+    ```
+
+
+## 6章（Atomic design）
+  - Atomic designとは
+    - BradFrostが考案したデザインシステム
+    - 画面要素を５段階に分け組み合わせることでUIを実現
+    - コンポーネント化された要素が画面を構成してるという考え方
+    - Atom, molecule, organism, template ,Pages
+      - Atom（原子）
+        - それ以上分解できない要素（ボタン、テキスト入力部分、アイコンなどなど）
+      - molecule(分子)
+        - Atomの組み合わせで意味を持つパーツ
+        - アイコン＋メニュー名
+        - プロフィール画像＋テキストボックス
+      - organism(有機体)
+        - AtomやMoleculeの塊で意味を持つ要素群
+        - twitterのサイドバーのメニュー
+        - 1つのツイートエリア
+      - template(ページのレイアウトを表現する要素)
+        - 実際のデータは持たない
+        - サイドメニュー、センターエリア、トピックwリアなど領域のこと？ワイヤーフレームの各領域のことかな
+      - page遷移ごとにほゆじされる各画面
+  - Atomic design で分割していく時に大事な考え方が、このコンポーネントの役割はなんなのかということ。
+    - 画面の主要となるボタンのデザインを定義して、そのボタンに表示する文言は変数で受け取って、コンポーネントを使い回すってやり方でアトム作ったりする
+  - 一旦Atomであるbuttonコンポーネントを作ってみる
+    - App.jsx
+    ```jsx
+    import { PrimaryButton } from "./components/atoms/button/PrimaryButton";
+    import { SecondaryButton } from "./components/atoms/button/SecondaryButton";
+    import "./styles.css";
+    export default function App() {
+      return (
+        <div className="App">
+          <PrimaryButton>テスト</PrimaryButton>
+          <SecondaryButton>検索</SecondaryButton>
+        </div>
+      );
+    }
+    ```
+
+    - PrimaryButton.jsx
+    ```jsx
+    import styled from "styled-components";
+    import { BaseButton } from "./BaseButton";
+    export const PrimaryButton = (props) => {
+      const { children } = props;
+      return <SButton>{children}</SButton>;
+    };
+    const SButton = styled.button`
+      background-color: #40514e;
+      color: #fff;
+      padding: 6px 24px;
+      border: none;
+      outline: none;
+      &:hover {
+        cursor: hover;
+        opacity: 0.8;
+      }
+      border-radius: 9999px;
+    `;
+    ```
+
+    - SecondaryButton
+    ```jsx
+    import styled from "styled-components";
+    import { BaseButton } from "./BaseButton";
+    export const SecondaryButton = (props) => {
+      const { children } = props;
+      return <SButton>{children}</SButton>;
+    };
+    const SButton = styled.button`
+      background-color: #11999e;
+      color: #fff;
+      padding: 6px 24px;
+      border: none;
+      outline: none;
+      &:hover {
+        cursor: hover;
+        opacity: 0.8;
+      }
+      border-radius: 9999px;
+    `;
+    ```
+
+    - 上記で一旦
