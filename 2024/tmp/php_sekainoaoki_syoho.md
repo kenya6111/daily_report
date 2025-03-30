@@ -1210,16 +1210,17 @@ for($i =0; $i <10; $i++){// forは困難感じで書く
 
 - Arsisan(職人という意味)
     - Laravelでよく使う操作やファイル生成を担当
-    - 「php artisan list」でできるコマンドのリスト表示できる
+    - 「php artisan list」でできるコマンドのリスト表示できる!!
 
 - Model (DBとやり取りする)
     - DBとのやりとりをSQLではなくて、その言語で書ける技術をORM/ORマッパーという。（Object-Relational Mapping）
     - laravelではORマッパーが「Eloquant」という名前で作られている
     - modelファイルの作り方
         - 「php artisan make:model Test」 (頭を大文字で書くのが一般的)
-        - app/Modelsディレクトリ下にモデルファイルふができている
+        - app/Modelsディレクトリ下にモデルファイルができている
 
 - マイグレーション
+    - DBテーブルの履歴管理をするもの。
     - ファイル場所はdatabases/migrations
     - モデルは単数系、ミグレーションは複数形で書くこと
     - 単数、複数形をLaraveｌが自動で判定してくれる
@@ -1266,7 +1267,7 @@ for($i =0; $i <10; $i++){// forは困難感じで書く
 
         - ここのmigrationsファイルなど直してDB修正したりしたり、
             - https://readouble.com/laravel/11.x/ja/migrations.html#column-method-text　←カラムの一覧
-        - 「php artisan migrate:fresh」// テーブル全削除し再生成
+        - 「php artisan migrate:fresh」// テーブル全削除し再生成 開発中は特に履歴残さなくていいなあ〜。とにかく追加したもの全部反映したいなって時に使う
         - 「php artisan migrate:refresh」// ロールバックして再生成
 
 - tinker
@@ -1334,42 +1335,42 @@ for($i =0; $i <10; $i++){// forは困難感じで書く
 
         - web.php
         ```php
-        <?php
+            <?php
 
-        use Illuminate\Support\Facades\Route;
-        use App\Http\Controllers\TestController;
-        /*
-        |--------------------------------------------------------------------------
-        | Web Routes
-        |--------------------------------------------------------------------------
-        |
-        | Here is where you can register web routes for your application. These
-        | routes are loaded by the RouteServiceProvider within a group which
-        | contains the "web" middleware group. Now create something great!
-        |
-        */
+            use Illuminate\Support\Facades\Route;
+            use App\Http\Controllers\TestController;
+            /*
+            |--------------------------------------------------------------------------
+            | Web Routes
+            |--------------------------------------------------------------------------
+            |
+            | Here is where you can register web routes for your application. These
+            | routes are loaded by the RouteServiceProvider within a group which
+            | contains the "web" middleware group. Now create something great!
+            |
+            */
 
-        Route::get('/', function () {
-            return view('welcome');
-        });
-        Route::get('tests/test', [TestController::class, 'index']); // 新規追加 TestControllerクラスのindexメソッドを呼ぶ
+            Route::get('/', function () {
+                return view('welcome');
+            });
+            Route::get('tests/test', [TestController::class, 'index']); // 新規追加 TestControllerクラスのindexメソッドを呼ぶ
         ```
 
         - TestController.php
-        ```php
-        <?php
+            ```php
+            <?php
 
-        namespace App\Http\Controllers;
+            namespace App\Http\Controllers;
 
-        use Illuminate\Http\Request;
+            use Illuminate\Http\Request;
 
-        class TestController extends Controller
-        {
-            public function index(){
-                return view('tests.test');
+            class TestController extends Controller
+            {
+                public function index(){
+                    return view('tests.test');
+                }
             }
-        }
-        ```
+            ```
 
         - そんでresoureces/viewの下にtest/test.blade.php　のディレクトリとファイルを作ってアクセスすれば表示される！！
 
@@ -1421,16 +1422,15 @@ for($i =0; $i <10; $i++){// forは困難感じで書く
 
     - ちなみにget()とall()を使った場合はコレクション型になり、それ以外のメソッドは別の型になることも多いのでそこは気をつける
     1.Eloquent(エロクアント) これさっき描いてたやつ
-    ues App\Models\Test;　　// モデル名::メソッド
-    $tests = Test::all()l
-    dd($tests);　// Eloquntで取得すると$testsはコレクション型になっている（配列を拡張したものでLaravel独自のもの）
-    
+    ```php
+        ues App\Models\Test;　　// モデル名::メソッド
+        $tests = Test::all()l
+        dd($tests);　// Eloquntで取得すると$testsはコレクション型になっている（配列を拡張したものでLaravel独自のもの）
+    ```
     - Laravel慣れないうちは、dd()をかけて、データ型がどうなっているか、確認する。
 
-
-
     2.クエリビルダ DBからスタートする書き方
-        - select where groupbyなどSQLに近い構文出かける
+        - select where groupbyなどSQLに近い構文でかける
         - rawで生のSQLもかける
         - get()やfirst()で「確定」することで返り血がコレクションになってくれて、
         - 確定しないとQueryBUilder型になってしまう
@@ -1496,12 +1496,17 @@ for($i =0; $i <10; $i++){// forは困難感じで書く
 
     - npm install // プロジェクトにnpm installする。　←ここでアクセスエラー出たので sudo npm installってしたらいけた
     - npm run dev //開発サーバ起動
-    - npm run build 本番ようにファイル出力
+    - npm run build 本番ようにファイル出力!!!!!!!!!!!!
 
     - 「php artisan route:list」でルートの一覧を表示する
 
+## 7章
+- モデル・マイグレーション
+    - 「php artisan make:model ContactForm -m」でモデルとマイグレーションファイルを同時生成
+        INFO  Model [app/Models/ContactForm.php] created successfully.
+        INFO  Migration [database/migrations/2025_03_20_014555_create_contact_forms_table.php] created successfully.
 
-
+    - 
 ## LaravelプロジェクトDocker起動
 - composer require laravel/sail --dev
     - laravel/sailをインストール

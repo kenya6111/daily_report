@@ -131,7 +131,13 @@
 ## 4章
 - テンプレート文字列
   - 従来のjsでは文字列結合が「＋」でしかできなかった。結構めんどくさい。
-  - これを簡単位できるようにしたのがテンプレート文字列
+  ```js
+  const name="ジャケ"
+  const age=31
+  const message = "私の名前は"+name+"です"+"年齢は"+age+"です。"
+  console.log(message) // 👆これだるすぎる
+  ```
+  - これを簡単にできるようにしたのがテンプレート文字列
 - アロー関数
   - ES2015で追加された新しい関数の定義方法
 - 分割代入
@@ -146,7 +152,8 @@
   const message1=`名前は${myProfile.name}です。年齢は${myProfile.age}です`
   console.log(message1)
 
-  const {name, age} = myProfile
+  // おb８右ジェクトの分割代入は{}でやる
+  const {name, age} = myProfile // 分割代入！！
   const message2=`名前は${name}です。年齢は${age}です`
   console.log(message2)
   ```
@@ -155,16 +162,43 @@
   ```js
   const myProfile2 =[222,333,444]
 
-  const [val1,val2,val3]= myProfile2
-  console.log(val1)
-  console.log(val2)
-  console.log(val3)
+  const [val1,val2,val3]= myProfile2 // 分割代入！！！！！
+  console.log(val1)// 222
+  console.log(val2)// 333
+  console.log(val3)// 444
+  ```
+- デフォルト値
+  ```js
+  const sayHello = (name = "デフォルト") => console.log(`こんにちは${name}さん!`);
+
+  sayHello("謙也");//こんにちは謙也さん!
+  sayHello();//こんにちはデフォルトさん!
+
+  ```
+  - 分割代入の時もデフォルト値を設定する
+  ```js
+  const myProfile = {
+    age: 31,
+  };
+
+  const { age, name = "ゲスト" } = myProfile;
+  console.log(age);
+  console.log(name);
   ```
 
+
+- オブジェクトの省略記法
   - オブジェクト内のキーとバリューが同じ場合は省略できる。
   ```js
+  const name3="kenya"
   const age3=21
+  // 以下のような感じでキーとヴァリューが同じ名前の時に省略気泡が発動する
+  //const myProfile3={
+  //  name3:name3,
+  //  age3:age3
+  //}
 
+  // 上記の場合はわざわざname3:name3のように書かなくても良くなる⇩
   const myProfile3 ={
     name3,
     age3
@@ -185,15 +219,16 @@
   const sumFunc = (num1 , num2)=> console.log(num1+num2)
   sumFunc(arr1[0], arr1[1]) //3
   sumFunc(...arr1) //3
-
   ```
+
+
   - スプレッド構文（まとめて受け取る）
   ```js
   const arr2 =[1,2,3,4,5]
   const [num1,num2,...num3]=arr2// num1に1, num2に2, num3に残りを配列として分割代入するってやつ
   console.log(num1)// 1
   console.log(num2)// 2
-  console.log(num3)// [3,4,5]
+  console.log(num3)// [3,4,5] ←arr2の残りの要素がまとまって入ったり。。
   ```
 
   - スプレッド構文（配列のコピー、結合）
@@ -207,8 +242,47 @@
 
   console.log(arr6)//[ 10, 20 ]
   console.log(arr7)// [ 10, 20, 30, 40 ]
-  console.log(arr8)//[ 10, 20 ] arr6と出力結果は変わらないが、こちらはarr4の三勝を引き継いでいるので、結果同じ場所を参照していることにあんる
+  console.log(arr8)//[ 10, 20 ] arr6と出力結果は変わらないが、こちらはarr4の参照を引き継いでいるので、結果同じ場所を参照していることにあんる
   ```
+
+  - mapやfilterを使った配列の処理
+    ```js
+    const arr2 = [1, 2, 3, 4, 5];
+    for (let index = 0; index < arr2.length; index++) {
+      const element = arr2[index];
+      console.log(element);
+    }
+
+    // ループの度に返却された値で新しい配列を生成することができる
+    const arr3 = arr2.map((element) => {
+      return element * 2;
+    });
+    console.log(arr3); // [2, 4, 6, 8, 10]
+
+    // もちろん単に配列の値を表示したいだけです〜って時はルーオプの機能だけを使って以下のようにかける
+    const arr4 = arr2.map((element) => console.log(element));
+
+    const arr5 = arr2.filter((element) => {
+      return element % 2 === 1; //filterではreturnの後に条件式を書く。
+    });
+
+    console.log(arr5); //[1, 3, 5]
+
+    // mapの第２引数はindexを指定できる
+    const arr4 = arr2.map((element, index) => console.log(index));
+
+    const arr6 = ["田中", "更科", "勝山"];
+    const arr7 = arr6.map((name) => {
+      if (name === "ああん") {
+        return name;
+      } else {
+        return name + "さん";
+      }
+    });
+    console.log(arr7);// ['田中さん', '更科さん', '勝山さん']
+
+  ```
+  - 自分で書いてみる、仮説検証ができる
 
 ## 5章
   - 指定した要素の1つ上隣の要素を取得
@@ -229,36 +303,36 @@
 ## 6章
 
 - とりあえず以下で画面に「こんにちは」」と表示される
-```js
+  ```js
+    import { StrictMode, strictMode } from "react";
+    import { createRoot } from "react-dom/client";
+
+    const rootElement = document.getElementById("root");
+    const root = createRoot(rootElement);
+
+    root.render(
+      <StrictMode> // strictモードで開発。基本これを使うことが推奨されている
+        <h1>こんにちは</h1>;
+      </StrictMode>
+    );
+
+  ```
+
+- 以下のように関数の中で表示したい内容をreturnして結果を表示するというやり方がJSX
+  ```js
   import { StrictMode, strictMode } from "react";
   import { createRoot } from "react-dom/client";
 
   const rootElement = document.getElementById("root");
   const root = createRoot(rootElement);
 
-  root.render(
-    <StrictMode> // strictモードで開発。基本これを使うことが推奨されている
-      <h1>こんにちは</h1>;
-    </StrictMode>
-  );
+  const App = () => {
 
-```
-
-- 以下のように関数の中で表示したい内容をreturnして結果を表示するというやり方がJSX
-```js
-import { StrictMode, strictMode } from "react";
-import { createRoot } from "react-dom/client";
-
-const rootElement = document.getElementById("root");
-const root = createRoot(rootElement);
-
-const App = () => {
-
-  return (
-    <h1>!!!!</h1>
-  )
-  
-};
+    return (
+      <h1>!!!!</h1>
+    )
+    
+  };
 
 root.render(
   <StrictMode>
