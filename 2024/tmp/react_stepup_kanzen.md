@@ -752,4 +752,81 @@
     `;
     ```
 
-    - 上記で一旦
+    - 上記で一旦入りの異なる2つのボタンコンポーネントができた。
+    - だがそれぞれのボタンにおいて、backgroundcolor以外のCSSは同じ。
+    - こいうときは2つのボタンにおいて共通のcssを１箇所に共通のものとして持たせるのが保守性が高くなる
+    - よって以下のコンポーネントを作る
+    - BaseButton.jsx
+    ```jsx
+    import styled from "styled-components";
+    export const BaseButton = styled.button`
+      background-color: #40514e;
+      color: #fff;
+      padding: 6px 24px;
+      border: none;
+      outline: none;
+      &:hover {
+        cursor: hover;
+        opacity: 0.8;
+      }
+      border-radius: 9999px;
+    `;
+    ```
+
+    - じょうきのbaseを２ボタンそれぞれで取り込む
+    - PrimaryButton.jsx
+    ```jsx
+    import styled from "styled-components";
+    import { BaseButton } from "./BaseButton";
+    export const PrimaryButton = (props) => {
+      const { children } = props;
+      return <SButton>{children}</SButton>;
+    };
+    const SButton = styled(BaseButton)`
+      background-color: #40514e;
+    `;
+    ```
+  - moleculeを作ってみる(完全な部品とまではいかないがAtomを組み合わせたもの)
+    - 今回はinput要素＋検索ボタンのAtom組み合わせ
+    - src/components/atoms/molecule/SearchInput.jsx
+    ```jsx
+    import { PrimaryButton } from "../atoms/button/PrimaryButton";
+    import styled from "styled-components";
+
+    import { Inputt } from "../atoms/input/Inputt";
+    export const SearchInput = () => {
+      return (
+        <SContainer>
+          <Inputt placeholder="検索条件を入力してください" />
+          <SButtonWrapper>
+            <PrimaryButton>検索</PrimaryButton>
+          </SButtonWrapper>
+        </SContainer>
+      );
+    };
+    const SContainer = styled.div`
+      display: flex;
+      align-items: center;
+    `;
+    const SButtonWrapper = styled.div`
+      padding-left: 8px;
+    `;
+    ```
+
+    - src/components/atoms/input/Input.jsx
+    ```jsx
+    import styled from "styled-components";
+    export const Inputt = (props) => {
+      const { placeholder } = props; //← 親から変数的にもらい動的に生成
+      return <SInput type="text" placeholder={placeholder} />;
+    };
+    const SInput = styled.input`
+      padding: 8px 16px;
+      border: solid #ddd 1px;
+      border-radius: 9999px;
+      outline: none;
+    `;
+    ```
+
+  - Organism
+    - 
