@@ -319,6 +319,8 @@
   ```
 
 - 以下のように関数の中で表示したい内容をreturnして結果を表示するというやり方がJSX
+- コンポーネントは大文字から始める
+- ※👆はファイル名は大文字始まりでなくてもいい。定義するコンポーネントの変数は大文字始まりじゃないと上手く動いてくれない！！！
   ```js
   import { StrictMode, strictMode } from "react";
   import { createRoot } from "react-dom/client";
@@ -333,46 +335,48 @@
     )
     
   };
-
-root.render(
-  <StrictMode>
-    <App/>
-  </StrictMode>
-);
-
-```
-
-- JSXのreturnは1つの要素として返すこと  
-import { StrictMode, strictMode } from "react";
-import { createRoot } from "react-dom/client";
-
-const rootElement = document.getElementById("root");
-const root = createRoot(rootElement);
-
-const App = () => {
-  return (
-    <>
-      <h1>!!!!</h1>
-      <h1>!!!!</h1>
-    </>
+  root.render(
+    <StrictMode>
+      <App/>
+    </StrictMode>
   );
-};
+  ```
 
-root.render(
-  <StrictMode>
-    <App />
-  </StrictMode>
-);
+- JSXのreturnは1つの要素として返すこと(単一の要素をreturnすること。)
+
+  ```js
+    import { StrictMode, strictMode } from "react";
+    import { createRoot } from "react-dom/client";
+
+    const rootElement = document.getElementById("root");
+    const root = createRoot(rootElement);
+
+    const App = () => {
+      return (
+        <>
+          <h1>!!!!</h1>
+          <h1>!!!!</h1>
+        </>
+      );
+    };
+
+    root.render(
+      <StrictMode>
+        <App />
+      </StrictMode>
+    );
+  ```
 
 
-- 関数単位でコンポーネントを定義していくと良い。
+- 1つの関数単位でコンポーネントを定義していくと良い。１コンポーネント作る時は１関数で分けて書くといい!!!!!
 - 別ファイルでexportされた関数を読み込むときは、基本パスを書くことはなくて、コンポーネントタグを書いたときに自動でおパスを書く仕組みがあるのでそれ使う
+- jsでもjsxでもどっちでも動くが、jsならjsだけ書いてある、jsxならコンポーネントが書いてあると判別できるので、分けて書くのが吉
 - .jsxファイルは「Reactのコンポーネント用の拡張子」
   - プロジェクトによって異なるが、ファイルの拡張子を見ただけでコンポーネントかどうか、が一発でわかるので推奨
   - ファイルのアイコンも変わるし、ｊsx用の保管などもあるのでリアクトのコンポーネントを書くのであればjsxの拡張子にするのがおすすめ
-- Reactのコンポーネント名は大文字始まりだが、ファイル名は小文字始まりでも良い
-- reactでは属性名はキャメルケースで書く
-- jsxの中でｊｓを書いていくよ〜って意味を表すのが「{}」
+- Reactのコンポーネント名は大文字始まりだが、ファイル名は小文字始まりでも良い。
+- reactでは属性名はキャメルケースで書く。小文字始まり大文字つなぎ
+- jsxの中でｊｓを書いていくよ〜って意味を表すのが「{}」。{}部分はjsとして認識される
   - 以下のように「」
   ```js
   export const App = () => {
@@ -430,11 +434,30 @@ root.render(
       </>
     );
   };
-
   ```
+  - 「styleはjs武ジェクトで適応する」ここ大事
+  ```jsx
+  export default App = () => {
+    const styleObject = {
+      color: "red",
+      fontSize: 111,
+      border: "1px solid red",
+    };
+    return (
+      <>
+        <p>aaaa</p>
+        <p style={{ color: "red" }}>test</p>
+        <p style={{ color: "red", fontSize: 110 }}>test</p>
+        <p style={styleObject}>test</p>
+        <button onClick={console.log(11)}>button</button>
+      </>
+    );
+  };
+  ```
+
 - Props
-  - コンポーネントに渡す引数のようなもの
-  - いろんな条件によってそのコンポーネントの振る舞いはもちろん変わるので、そこをpropsで異なる変数を渡す。振る舞いごとにコンポーネントを作るのではなく状態を渡して変化させる
+  - コンポーネントに対して渡す引数のようなもの
+  - いろんな条件によってそのコンポーネントの振る舞いはもちろん変わるので、そこをpropsで異なる変数を渡す。振る舞いごとにコンポーネントを作るのではなく状態を渡して変化させる。
   - App2.jsx
   ```jsx
   import { ColorfulMessage } from "./components/ColorfulMessage";
@@ -459,10 +482,47 @@ root.render(
 
   ```
 
+  - 上記のソースで色だけ変える場合、スタイルオブジェクト量産しなくちゃいけなくて大変。煩雑。
+  ```jsx
+  export default App = () => {
+    const styleObject = {
+      color: "red",
+      fontSize: 111,
+      border: "1px solid red",
+    };
+    const styleObject2 = {
+      color: "green",
+      fontSize: 111,
+      border: "1px solid green",
+    };
+    const styleObject3 = {
+      color: "blue",
+      fontSize: 111,
+      border: "1px solid blue",
+    };
+    return (
+      <>
+        <p>aaaa</p>
+        <p style={{ color: "red" }}>test</p>
+        <p style={{ color: "red", fontSize: 110 }}>test</p>
+        <p style={styleObject}>test</p>
+        <p style={styleObject2}>test</p>
+        <p style={styleObject3}>test</p>
+        <button onClick={console.log(11)}>button</button>
+      </>
+    );
+  };
+  ```
+  ![alt text](image-29.png)
+
+  - この問題をpropsを使って解決する⇩
   - ColorfulMessage.jsx
     - コンポーネントへの引数はまとめてpropsで受け取れる。この時受け取る引数を{}で囲わなくていい。（1つ1つの引数を明示する時はオブジェクトで引数を囲う）
     - 1つ1つで受け取ってるのは分割代入てやつ
     - propsももちろんjsオブジェクトなので{props.message}って感じで書く
+  - スタイルのcolorとmessageをコンポーネントに渡して、動的にメッセージを変更して表示することができる。
+  - さっきはstyle部ジェクトを何個も何個も書かなきゃいけなかったが、今回はColorfulMessageに渡す引数さえ変えれば生成できる仕組みになった
+
   ```jsx
   export const ColorfulMessage = (props) => {
     console.log(props.color);
@@ -473,7 +533,6 @@ root.render(
     return <h1 style={contenetStyle}>{props.message}</h1>;
   };
   ```
-
   - コンポーネントタグの中身をコンポーネント内で受け取る
   - App2.jsx
   ```jsx
@@ -505,8 +564,9 @@ root.render(
     );
   };
   ```
+  - 上記で共通のコンポーネントを使うことでスッキリ書くことができました。めでたしめでたし。
 
-  - propsの中には特に定義していなくてもタグで囲ったものをchildrenで受け取る仕組みがある
+  - propsの中には特に定義していなくても,親ファイルのタグで囲ったものをchildrenで受け取る仕組みがある
     ```jsx
     export const ColorfulMessage = (props) => {
       console.log(props.color);
@@ -532,7 +592,7 @@ root.render(
     };
     ```
 
-    - 引数の時点で分割代入しちゃう書き方もある・
+    - 引数の時点で分割代入しちゃう書き方もある
     ```jsx
     export const ColorfulMessage = ({color, children}) => {
       console.log(color);
@@ -555,14 +615,16 @@ root.render(
       return <h1 style={contenetStyle}>{children}</h1>;
     };
     ```
-
     - オブジェクトとの省略記法→オブジェクト内のキーとバリュー名がいっしょのの名前入ればいいね
-  
+
 - State
   - それぞれのコンポネントが持ってる状態を管理するもの
   - stateを定義するにはreactが定義しているuseStateと呼ばれるhookを使う
   - useStateは配列返却するもの配列返却するもの
   - 以下のソースでは、カウントボタン押しても１ずつ増える。読んだ瞬間に更新されるわけではない
+  - Stateの更新を検知して、そこでコンポーネントが上から評価されているながれ。stateの変数が更新されたな。もう一回画面見直そう〜。numが+1なったのでここも+1の表示やなって感じでreactが修正してくれている。
+  setNumを呼ばれた瞬間に画面更新処理をしてしまうと、set関数が他にもたくさんあった時に、更新が何回もかかってパフォーマンスがクソになる。
+  なので特定の関数の中で呼ばれているset関数に関してはまとめてみて、どれか1つが変更されてれば画面更新みたいなことをしている。
   ```jsx
   import { ColorfulMessage } from "./components/ColorfulMessage";
   import { useState } from "react";
@@ -595,7 +657,7 @@ root.render(
   };
   ```
 
-  - 以下の例ではsetNum実行時にnumを更新してくれる
+  - 以下の例ではsetNum実行時にnumを更新してくれる。なので２回書いてるので一回カウントアップで2増えることになる
   ```jsx
   import { ColorfulMessage } from "./components/ColorfulMessage";
   import { useState } from "react";
@@ -633,8 +695,7 @@ root.render(
 
   ```
 
-  - useStateに限らず、すべてのuse〇〇のフック系は、関数コンポーネントの一番上の階層に書く
-
+  - useStateに限らず、すべてのuse〇〇のフック系は、関数コンポーネントの一番上の階層（コンポーネント内のｂグローバル領域？）に書く
 
 - useEffect
   - 際レンダリングを制すものがリアクト開発を制す
@@ -702,7 +763,7 @@ root.render(
         <br />
         <button onClick={onClickToggle}>on off</button>
 
-        {isShowFace && <p>（＾＞＾）</p>}
+        {isShowFace && <p>（＾＞＾）</p>}// これ、アンパサンド2つでisShowFaceがtrueなら、右の値が返されて表示されるお決まりのロジック
       </>
     );
   };
@@ -800,7 +861,7 @@ root.render(
         <div className="incomplete-area">
           <p className="title">未完了のTodo</p>
           <ul>
-            {incompleteTodos.map((todo) => {
+            {incompleteTodos.map((todo) => {//ここから incompleteTodosの要素分だけ、未完了タスクのレコードを生成・表示する
               return (
                 <li key={todo}>
                   <div className="list-row">
@@ -810,7 +871,7 @@ root.render(
                   </div>
                 </li>
               );
-            })}
+            })}// ここまで
           </ul>
         </div>
         <div className="complete-area">
@@ -863,7 +924,7 @@ root.render(
     ]);
 
     const onChangeTodoText = (event) => {
-      setTodoText(event.target.value); // これで入力された文字が取得できる
+      setTodoText(event.target.value); // これで入力された文字が取得できる!!!!!
       console.log(event.target.value);
     };
     const onClickAdd = () => {// ←追加
@@ -946,7 +1007,7 @@ root.render(
       setTodoText("");
     };
     const onClickDelete = (index) => { // ここ追加！！！！！！！！
-      const newTodos = [...incompleteTodos];
+      const newTodos = [...incompleteTodos];////配列自体に処理をせず、コピーしてそれを加工する!!!!
       newTodos.splice(index, 1);
       setIncompleteTodo(newTodos);
       console.log(index);
@@ -1043,9 +1104,9 @@ root.render(
     const onClickComplete = (index) => {
       const newIncompleteTodos = [...incompleteTodos];
       newIncompleteTodos.splice(index, 1); // index番目の文字から何文字削除するか
-      setIncompleteTodo(newIncompleteTodos);
+      setIncompleteTodo(newIncompleteTodos);//未完了タスクから削除ボタンを押したタスクを無くしたリストを再設定
 
-      const newCompleteTodos = [...completeTodos, incompleteTodos[index]];
+      const newCompleteTodos = [...completeTodos, incompleteTodos[index]];// 未完了タスクから消したタスクを完了タスクに追加
       setCompleteTodo(newCompleteTodos);
     };
     return (
@@ -1103,3 +1164,7 @@ root.render(
   };
 
   ```
+
+  - コンポーネント化したのにスタイルに関してはコンポーネント化されてない。スタイルだけグローバルにある状態。
+  - 本来コンポーネント化したらそのコンポーネントの情報はコンポ年とないだけに閉じておきたい
+  - なのでグローバルにstyle.cssにまとめてあるｃｓｓをコンポーネントに持ってきてあげる
