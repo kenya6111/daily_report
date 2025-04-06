@@ -3,25 +3,30 @@
     - 1日30minずつ消化していき、大体１ヶ月で完遂。
 ## 1章
 - Vuejsはブラウザ側で実行されてブラウザ側でUIを構築する
-- ページごとにサーバにアクセスするみたいな一般的なWEBの動きとは少し異なる
+- ページごとに、部品クリックするごとにサーバにアクセスするみたいな一般的なWEBの動きとは少し異なる
 - 一回だけHTMLのページをリクエストで取得して、それ以降は新たにリクエストしたりせずにひたすらブラウザ側だけでUIの処理をするみたいなアプリのことをSPA(シングルページアプリケーション)という。
+- フレームワーク＝枠組み・骨組み
 - ほとんどの処理を書いておいたのであとはここだけ書いておいてください。そしたらいい感じに動くようになりますよっていうのがフレームワーク
 
 ## 2章
-- Vueはコンポーネントというものをたくさん作って、それをうまく配置することで1つのアプリケーションを作っているんです。（それぞれのファイルは.vueファイルで、単一ファイルコンポーネントという。SFCともいう。）
+- Vueはコンポーネントというものをたくさん作って、それをうまく配置することで1つのアプリケーションを作っているんです。（それぞれのファイルは.vueファイルで、単一ファイルコンポーネントという。SFCともいう。）SFC=シングルファイルコンポーネントという。
+
+- .vueファイル内にはtemplateタグやscriptタグなどを使って書くが、
 - ブラウザはシンプルなHTML,CSS,JSしか理解できない。なのでブラウザが理解できるようにvueファイルはjsのファイルとかに変換する必要がある
 
 - Vite(ビート)はVue→ｊｓの変換を裏側で自動でやってくれる
+- Vueファイルが書き換わったら、裏側で全部書き換えてくれる
+- Vite自体もjsで書かれている
 - nodejs → 単純にｊｓを実行するソフトウェア。
 
 - npm create vue@latest コマンドでvueプロジェクトが作成できる
 - vite.config.js
     - viteのせっていファイル
     - viteでvueを使う設定などがされている
-- package.json
+- package.json 
     - project全体のさまざまな設定が書かれている
     - devDependencies → 開発の時だけ使うものが列挙される
-    - このpackage.jsonに書かれたものたちは、プロジェクトにインストールは最初されていない。ただ書かれただけ。なので以下のコマンドでインストールする。
+    - このpackage.jsonに書かれたものたちは、プロジェクトにインストールは最初されていない。ただ羅列されているにすぎない。書かれただけ。なので以下のコマンドでインストールする。
         - npm install 
     - インストールしたものはnode-modulesというディレクトrに入ってくる。
     - package.jsonのscriptsに書かれたものはコマンドに関するやつら。npm runの後ろに書いて実行できる
@@ -57,7 +62,7 @@
 - srcフォルダ
     - ここが一番開発者にとってメイン
     - このソースフォルダ内のファイルに関してはビートはさまざまな変換処理をやってくれる
-    - 逆にビートに何も操作されたくないファイルを置きたいときはpublicフォルダ内にファイル置く
+    - 逆にビートに何も操作されたくないファイルを置きたいときはpublicフォルダ内にファイル置
 - .vscodeフォルダ
     - vscodeの設定をするためのフォルダ
     - extentions.jsonファイルにはおすすめのVSCODEの拡張機能が一覧で表示されている。これがあるためにvscode起動時に右下におすすめの拡張機能はこれですってポップアップでていた、
@@ -123,7 +128,39 @@
     ```
 
     - tempalteのボタンタグに@click="script内の関数名"とすることでボタンクリック時にscriptタグ内の関数を呼び出せる。
+    
+    - 以下の例ではincrementボタン押下時にcountをインクリメントしてる。consoleの表示はインクリメントされるが、画面のcountの表示は増えません。なぜか！！！！
+    - よく考えればjsの絵s会では当たり前のこと。script内では変わっているが、template内までは変わらない。そこで理アクティビティふがある。
+    ```vue
+    <script setup>
+        const title = 'vue'
+        const title2 = 'vue2'
+        const title3 = 'vue3'
+        let price = 9.99
+        let count = 0
+        function increment() {
+        count += 1
+        console.log(count)
+        }
+    </script>
+
+    <template>
+    <p>sss</p>
+    {{ title }}
+    {{ title2 }}
+    {{ title3 }}
+    {{ price }}
+    {{ count }}
+    <button @click="increment">increment</button>
+    </template>
+
+    <style></style>
+
+    ```
+
+    - 
 - リアクティビティ
+    - import { ref } from 'vue'でrefという関数をインポートする
     - 以下の例ではボタン押下時にscript内のprinteがインクリメントされるが、画面表示のpriceは9.99のまま。これはリアクティブじゃない。
     ```vue
     <script setup>
@@ -151,7 +188,10 @@
     ![alt text](<スクリーンショット 2025-01-03 17.59.47.png>)
 
 
-    - リアクティブにするにはリアクティブにしたい値をref()で囲む。で、するとpriceはrefオブジェクト内のvalueプロパティに格納されるので、更新する際はprice.value+=1という感じでrefオブジェクトのvalueプロパティに対して更新する。templateの方は.valueはつけなくてOK。
+    - リアクティブにするにはリアクティブにしたい値をref()で囲む。
+    - で、するとpriceはrefオブジェクト内のvalueプロパティに格納されるので、更新する際はprice.value+=1という感じでrefオブジェクトのvalueプロパティに対して更新する。templateの方は.valueはつけなくてOK。
+    - refで囲むとRefImplというオブジェクトになる
+    - なので9.99という数字をリアクティブにすることができる！みたいな言い方をする
     ```vue
     <script setup>
         import {ref} from 'vue'
@@ -229,6 +269,8 @@
             color:red;
         }</style>
     ```
+
+    - refオブジェクト内のrefプロパティを呼び出したり書き換えるときは.valueは2ツモつけないでいい。
     - ちなみに公式ドキュメントでは基本t系にref関数を使うように記載がある。
 # 3章
 - templateタグ内の記載はViteなどによってjsのソースに変換される。
@@ -283,7 +325,7 @@ h1{
     - v-html
         - v-htmlに渡されたrefオブジェクトに格納された文字列（htmlの記述）をhtmlと認識し画面に表示してくれる
         - 以下の例では{{ message}}の方はそのまま「<h1>message</h1>」と出力され、
-        - v-htmlの方はhtmlとして画面異表示される。
+        - v-htmlの方はhtmlとして画面に表示される。
         ```vue
         <script setup>
             import {ref} from 'vue'
@@ -301,11 +343,31 @@ h1{
         ```
         - ただ、v-htmlに適用する値は信頼できるもの（すなわちユーザの入力したものを入れてはいけない）のみ適用という風雨にしないといけない
         - 出ないとクロスサイトスクリプティングになってしまう。
+
+    ```txt
+    1. {{ }}（Mustache記法）による表示
+        目的: テンプレート内でテキストを「表示」する。
+        使いどころ:単純にテキストを埋め込みたいとき
+                {{ msg }} のように変数の値や計算結果をテキストとして画面に反映したい場合
+    
+    2. v-bind や v-if / v-for などの「v-ディレクティブ」
+        目的: テンプレート内の要素や属性に対して、「動的バインド」や「条件分岐・ループ」などのロジックを適用する。
+        使いどころ:
+        v-bind: HTML属性（src / class / style / value etc.）を動的に変化させたいとき
+        v-bind:src="imageUrl" → 画像URLを動的に変えたい
+        v-bind:class="{ active: isActive }" → クラス付け替えしたい
+        v-model: 主にフォームの入力とデータを双方向バインディングしたいとき
+        v-if / v-else / v-show: 要素の表示・非表示をデータの状態によって切り替えたいとき
+        v-for: 配列やオブジェクトのリスト表示
+    ```
+
     - v-bind
         - 普通のタグ内のTextContentにjsscriptタグ内の変数を表示させるときは二重波括弧「{{}}」でいいが属性値に表示させるときは「v-bind」を使う
+        - どんなhtml属性に対しても、v-bindで動的に値を設定することができる
+        - 普通のテキスト出力では二重波括弧。属性値にはv-bindを使う。
         - 逆にv-bind使わず属性名＝”{{ ref変数 }}”ってのは機能しない
         - 省略した書き方で「v-bind」を省いて「:」だけ残した書き方もでき、esLintではこちらが推奨される
-        - v-bindを複数の属性に一気に適用させるにはv-bind="{id:vueID, href:vueURL}"のように書く
+        - v-bindを複数の属性に一気に適用させるにはv-bind="{id:vueID, href:vueURL}"のように書く（v-bindの後にコロンじゃなくイコール。）
         ```vue
         <script setup>
             import {ref} from 'vue'
@@ -334,19 +396,23 @@ h1{
         <template>
         <h1>{{ count }}</h1>
         <button v-on:click="count+=100">increment</button>
-        <button @click="count+=100">increment</button>
-        <button @click="countUp">increment</button>
+        <button @click="count+=100">increment</button> こういう処理を直接書くパターンをインラインハンドラと言って、
+        <button @click="countUp">increment</button>　関数を書くパターンをメソッドハンドラという
         </template>
         <style>
         h1{
         color:red;
         }</style>
         ```
+
+        - 語源: “inline（行内）” という言葉のとおり、「インライン」という言葉自体が、「行の中に直接埋め込む」 という意味を持ちます。
+        - たとえば HTML の生の書き方でいうと、<button onclick="alert('Hello')"> のように、処理を <button> タグの属性へ直接書くのが「インラインイベントハンドラ」です。
+        - これと同じ発想で、Vue テンプレートでも処理を直接書くため「インラインハンドラ」と呼ばれています。
         - @click(v-on:click)の部分をイベント、="count+=10"(="countUp")の部分をハンドラという
         - count++のように直接処理を書くパターンをインラインハンドラ、関数を書くぱたーんをメソッドハンドラという
     - イベントオブジェクトの取得
         - クリックイベントのようなブラウザが発生させているイベントは「イベント」が発生した時に同時に「イベントオブジェクト」というそのイベントの情報を持ったオブジェクトを生成している。vuejsはそれを取得できる。
-        - v-onで呼び出した関数の引数には仮引数にeventが書かれなくともeventを呼び出せる。
+        - v-onで呼び出した関数の引数には仮引数にeventが書かれなくともeventを呼び出せる。自動でeventが入る。cli
         - tempalteでは$eventで絵べんTのオブジェクトを取得できている
         ```vue
         <script setup>
@@ -373,6 +439,8 @@ h1{
         </style>
         ```
         - 引数を和すには以下の通り
+            - そのまま@click="countUp(100)"のようにかける
+            - Reactだと()=>{countUp(100)}のように書かないと即実行されてダメになるんだよな〜
         ```vue
         <script setup>
             import {ref} from 'vue'
@@ -413,6 +481,7 @@ h1{
 
         - 以下の例ではstopPropagationをしている
         - vueでは@clickのついた以下のbuttonタグを押したら、親要素のdivの@clickも呼ばれる仕様になっている
+        - 👆vueではってより、vueでなくとも内包する要素クリック＝親要素クリックってことになるわな。
         - Propagation=「伝播」であり、button押した時に親要素の@clickも呼ばれるような電波を止める働きがある。
         ```vue
         <script setup>
@@ -440,12 +509,12 @@ h1{
         </style>
 
         ```
-
         - 両者とも省略して以下のようにかける
         ```vue
         <a href="https://vuejs.org" @click.prevent="">increment</a>
         <button @click.stop="">increment</button>
         ```
+
 （30分消化 2025/1/6時点）
 - イベント修飾子と似たものとしてキー修飾子がある
     - これはキーボード系のイベントで使える
@@ -493,6 +562,7 @@ h1{
     <style>
     </style>
     ```
+    - これによっって動的にデータを指定できる
 - v-modelを使用してInputに入力した値をscriptでの変数と同期させる
 ```vue
 <script setup>
@@ -508,35 +578,96 @@ h1{
 
 ```
 - 式もreactiveに扱いたいときはcomputed()を使う。
+    - reactiveシステムを保ったまま処理を1つにまとめる方法のこと。
     - 以下の例ではinputに4以上入れれば{{ evaluation}}の表示がBadからGoodに切り替わる。
     - computedは.valueにアクセスするたびにcomputedが実行される
     - あとcomputed内のrefオブジェクトが1つでも変更されればcomputedが評価して最新の値を算出してくれる優れもの。ようは値を監視してくれる
-```vue
-<script setup>
-    import { ref,computed } from 'vue'
-    const score =ref(0)
-    const evaluation = computed(()=>{
-      return score.value > 3 ? 'Good' : 'Bad'
-    })
-    console.log(evaluation.value)
-</script>
-<template>
-  <h1>{{ evaluation }}</h1>
-  <input v-model="score" type="text" >
-  <h1>{{  score }}</h1>
-</template>
-<style>
-</style>
-```
+    - 以下では{{}}内で条件指揮を書いてるがこれだとなんか、みづらい、
+
+    ```vue
+    <script setup>
+    import { ref } from 'vue'
+    let count = ref(0)
+    </script>
+
+    <template>
+        <p>{{ count > 3 ? 'good' : 'bad' }}</p>
+        {{ count }}
+        <button @click="count++">かアップ</button>
+    </template>
+
+    <style></style>
+    ```
+    - じゃあ評価式をscript内に書いちゃおーって書いてみるも
+    - これだとcountが0の時に評価されてbadになって、ずっとそれが表示され続ける。当たり前だが。カウントアップしてもbadから変わらない。
+    ```vue
+    <script setup>
+    import { ref } from 'vue'
+    let count = ref(0)
+    let evaluetion = count.value > 3 ? 'good' : 'bad'
+    </script>
+
+    <template>
+    <p>{{ count > 3 ? 'good' : 'bad' }}</p>
+    {{ evaluetion }}
+    {{ count }}
+
+    <button @click="count++">かアップ</button>
+    </template>
+
+    <style></style>
+    ```
+
+    - そういう時に使うのがcomputed。
+    ```vue
+    <script setup>
+        import { ref,computed } from 'vue'
+        const score =ref(0)
+        const evaluation = computed(()=>{
+            return score.value > 3 ? 'Good' : 'Bad'
+        })
+        console.log(evaluation.value)
+    </script>
+    <template>
+    <h1>{{ evaluation }}</h1>
+    <input v-model="score" type="text" >
+    <h1>{{  score }}</h1>
+    </template>
+    <style>
+    </style>
+    ```
     - computedでは、要は値を監視して、変更あれば実行して最新お値を評価して出すって役割なので、computedで算出した値を変更はしてはいけないってか普通しない。読み取り専用って感じ。またcomputed関数内で外部の変数を変更するお湯なことはしない。あくまで最新の値を見て評価するだけ
-    - computedはcomputed関数内のreactiveなデータを監視して変更されればcomputedを実行するという仕組みだが、その変更を監視する仕組みをリアクティブエフェクトという。
+    - computedは値の更新を検知して最新お値を返すって処理をまとめてくれているだけのやつ。最新の値を返してくれるだけ。
+    - computedはcomputed関数内のreactiveなデータを監視して変更されればcomputedを実行するという仕組みだが、その変更を監視する仕組みを「リアクティブエフェクト」という。
     - このリアクティブエフェクトはcomputed以外でも使われており、それは「watcher」とテンプレートで使われている
     - テンプレートでのreactiveeffectは、変更を検知したら再レンダリングする。
-    - computedの結果であるevaluationがtemplate内で使われていない場合、毎回最新の値で評価しても無駄なので、（表示しなくて誰もミない）computedは時効されなくなる
-（35分消化 2025/1/7時点）
+    - computedの結果であるevaluationがtemplate内で使われていない場合、毎回最新の値で評価しても無駄なので、（表示しなくて誰もミない）computedは実行されなくなる
+    （35分消化 2025/1/7時点）
+
+    - 以下のようにただ評価指揮を入れたメソッドをtempalteで呼び出せばcomputedのようにcountの変更ごとに表示値を変えられるが、
+    - 結論computedを使うべき。
+    - なぜなら、computeｄは内包する変数が変わった際にだけ実行されるが、上記のニセcomputedだと際レンダリングされると、闇雲に毎回際レンダリングごとに実行される。
+    ```vue
+    <script setup>
+    import { ref } from 'vue'
+    let count = ref(0)
+    function tmp() {
+    return count.value > 3 ? 'good' : 'bad'
+    }
+    </script>
+
+    <template>
+    {{ tmp() }}
+    {{ count }}
+    <button @click="count++">かアップ</button>
+    </template>
+
+    <style></style>
+
+    ```
 
 
-
+    - あとcomputedは例えばcomputedの返り値のevaluationがテンプレート内で使われると変更検知して値を返すが、使われてないなら実行しても意味ないやんってことでcomputedが実行されなくなるっていう最適化されている
 
 ## 19章 (はじめに Vue2)
 - 1000分=16.8時間
