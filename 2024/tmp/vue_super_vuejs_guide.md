@@ -752,6 +752,113 @@ h1{
         - methodsはいろんな関数が並べられている場所。
     - methods内の関数内でthis.messageとす流書き方で、Vueインスタンス内のmessageプロパティにアクセスしますという意味になる
 
+- 何かが変更されたら何かの処理をするってだけ使いたい時（処理をまとめたいわけではないとき。computedだと評価値を使わないと実行されないとかもあるし）computedは処理をまとめるモク亭に特化している
+    - watchEfectでは何部のヘンスに変更あれば勝手に実行されるってもの。
+    - 検知する対象の変数はwatchEffect内部で読み取っっている必要がある
+    - なのでconsole.log(count2.value)の行を消すと実行されなくなる。
+    ```vue
+    <script setup>
+        import { ref, watchEffect } from 'vue'
+
+        const count2 = ref(0)
+
+        watchEffect(() => {
+        console.log(count2.value)
+        })
+        </script>
+
+        <template>
+        <button @click="count2++">かアップ</button>
+        </template>
+
+        <style></style>
+    ```
+- 
+    - watchはwatchEffectと違い引数を2つとる。
+    - 第一引数に関したいリアクティブなデータ、
+    - 第二引数にその監視しているデータが更新された時に実行したい関数を書く（この関数の引数に新しい値と古い値を引数に取ることがで気、,function取得できる。）
+    - なので、watchとwatchEffectの違いは明示的に監視対象のデータを指定するかどうか。が違い。
+    - ということはwatchEffectは内包するリアクティブ変数のいづれかが変われば毎回時効されるのに対して、
+    - watchは指定した変数が変更時にのみ実行されるってことになるね。
+    - 
+    - 以下のようになる。
+    ```vue
+    <script setup>
+    import { ref, watch } from 'vue'
+
+    const count2 = ref(0)
+    watch(count2, (newV, oldV) => {
+    console.log(count2.value)
+    console.log(newV)
+    console.log(oldV)
+    })
+    </script>
+
+    <template>
+    <button @click="count2++">かアップ</button>
+    </template>
+
+    <style></style>
+    ```
+- class属性はこう指定する！
+    - :class="{}"って感じで書いて、その中にプロパティとtrue or falseを書く感じ。
+    ```vue
+    <script setup>
+    import { ref } from 'vue'
+    // const isRed = ref(true)
+    // const isBgBlue = ref(true)
+    // function toggleClass() {
+    //   isRed.value = false
+    //   isBgBlue.value = false
+    // }
+    </script>
+
+    <template>
+    <p :class="{ red: true, 'bg-blue': true }">Vuejs</p>
+    <button @click="toggleClass">kirikae</button>
+    </template>
+
+    <style>
+    .red {
+    color: red;
+    }
+
+    .bg-blue {
+    background-color: blue;
+    }
+    </style>
+
+    ```
+
+    - そのtrue,false部分をリアクティブにすることによって、動的に切り替えたりする
+    ```vue
+    <script setup>
+    import { ref } from 'vue'
+    const isRed = ref(true)
+    const isBgBlue = ref(true)
+    function toggleClass() {
+    isRed.value = !isRed.value
+    isBgBlue.value = !isBgBlue.value
+    }
+    </script>
+
+    <template>
+    <p :class="{ red: isRed, 'bg-blue': isBgBlue }">Vuejs</p>
+    <button @click="toggleClass">気r変え</button>
+    </template>
+
+    <style>
+    .red {
+    color: red;
+    }
+
+    .bg-blue {
+    background-color: blue;
+    }
+    </style>
+
+    ```
+
 # 20章（これがVuejsの基礎、テンプレート構文だ！ Vue2）
 - そもそもテンプレートとは何か
     - さっきのソースでいう、以下の部分
