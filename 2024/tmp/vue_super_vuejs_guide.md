@@ -669,6 +669,282 @@ h1{
 
     - あとcomputedは例えばcomputedの返り値のevaluationがテンプレート内で使われると変更検知して値を返すが、使われてないなら実行しても意味ないやんってことでcomputedが実行されなくなるっていう最適化されている
 
+- class属性はこう指定する！
+    - :class="{}"って感じで書いて、その中にプロパティとtrue or falseを書く感じ。
+    ```vue
+    <script setup>
+    import { ref } from 'vue'
+    // const isRed = ref(true)
+    // const isBgBlue = ref(true)
+    // function toggleClass() {
+    //   isRed.value = false
+    //   isBgBlue.value = false
+    // }
+    </script>
+
+    <template>
+    <p :class="{ red: true, 'bg-blue': true }">Vuejs</p>
+    <button @click="toggleClass">kirikae</button>
+    </template>
+
+    <style>
+    .red {
+    color: red;
+    }
+
+    .bg-blue {
+    background-color: blue;
+    }
+    </style>
+
+    ```
+
+    - そのtrue,false部分をリアクティブにすることによって、動的に切り替えたりする
+    ```vue
+    <script setup>
+    import { ref } from 'vue'
+    const isRed = ref(true)
+    const isBgBlue = ref(true)
+    function toggleClass() {
+    isRed.value = !isRed.value
+    isBgBlue.value = !isBgBlue.value
+    }
+    </script>
+
+    <template>
+    <p :class="{ red: isRed, 'bg-blue': isBgBlue }">Vuejs</p>
+    <button @click="toggleClass">気r変え</button>
+    </template>
+
+    <style>
+    .red {
+    color: red;
+    }
+
+    .bg-blue {
+    background-color: blue;
+    }
+    </style>
+
+    ```
+
+## 4章
+- v-if など
+    - 以下のように書く
+    - v-ifとｋv-elseはその直後に書いていかないといけないルール
+    ```vue
+    <script setup>
+    import { ref } from 'vue'
+    const ok = ref(true)
+    </script>
+    <template>
+    <p v-if="ok">OK!</p>
+    <p v-else>NG!</p>
+    <button @click="ok = !ok">切り替え</button>
+    </template>
+    <style></style>
+    ```
+
+    - こういう感じでv-ifをまとめて適用したいときに無意味なdivを作ってしまい崩れるって時はtemplateでさらに囲えば良い。
+    - vueはtemplateを最終てkに存在しないタグとして消してくれうる
+    - デベツール見ると消される
+    ```vue
+    <script setup>
+    import { ref } from 'vue'
+    const ok = ref(true)
+    </script>
+
+    <template>
+    <div v-if="ok">
+        <p>aaaaaa</p>
+        <a href="">gfgsfgsgfds</a>
+        <h2>aaaa</h2>
+    </div>
+    <button @click="ok = !ok">切り替え</button>
+    </template>
+
+    <style></style>
+
+    ```
+
+    ```vue
+    <script setup>
+    import { ref } from 'vue'
+    const ok = ref(true)
+    </script>
+
+    <template>
+    <template v-if="ok">
+        <p>aaaaaa</p>
+        <a href="">gfgsfgsgfds</a>
+        <h2>aaaa</h2>
+    </template>
+    <button @click="ok = !ok">切り替え</button>
+    </template>
+
+    <style></style>
+
+    ```
+
+- v-show
+    - v-ifディレクティブに似たやつ。
+    - v-ifはfalseの時にDOMから要素自体が消滅するが、
+    - v-showはfalseの場合でも要素はDOMに残る。display:noneで消されている状態になるという違いがあある
+    - じゃあどっち使えばええねんってところだが、それは判別の変数が高い頻度で切り替わる時はv-showを使う。なぜならv-showは要素を抹消したり作ったりしないので処理が早くなるから。
+    ^- 逆に高頻度で切り替わらないといはv-ifでいい
+- v-for
+    - v-forの書き方は以下。
+    ```vue
+    <script setup>
+    import { ref } from 'vue'
+    const fruits = ref(['apple', 'banana', 'grape'])
+    </script>
+
+    <template>
+    <div v-for="fruit in fruits" :key="fruit">
+        {{ fruit }}
+    </div>
+    </template>
+
+    <style></style>
+
+    ```
+    - keyはvueが内部的にレンダリングする際のヒントとなるためだけに存在する
+    - keyはユニークに！
+    ```vue
+    <script setup>
+    import { ref } from 'vue'
+    const fruits = ref([
+    { id: 1, name: 'apple1' },
+    { id: 2, name: 'apple2' },
+    { id: 3, name: 'banana' },
+    { id: 4, name: 'grape' },
+    ])
+    </script>
+
+    <template>
+    <div>
+        <button @click="fruits.shift()">シフト</button>
+        <li v-for="fruit in fruits" :key="fruit.id">
+        {{ fruit.name }}
+        <input type="text" />
+        </li>
+    </div>
+    </template>
+
+    <style></style>
+
+    ```
+
+    - vueは際レンダリングするときに可能な限り効率的の要素の移動が最小限になるように変更を加える
+
+ー v-forでインデックス（何周目か）を取るホフ
+    - v-forのfruitを（）で囲って第二引数にインデックスが入る
+    - このindexはkeyには使えない。なぜなら各要素とインデックスが結び付いてはいないから
+
+    ```vue
+    <script setup>
+    import { ref } from 'vue'
+    const fruits = ref([
+    { id: 1, name: 'apple1' },
+    { id: 2, name: 'apple2' },
+    { id: 3, name: 'banana' },
+    { id: 4, name: 'grape' },
+    ])
+    </script>
+
+    <template>
+    <div>
+        <button @click="fruits.shift()">シフト</button>
+        <li v-for="(fruit, index) in fruits" :key="fruit.id">
+        {{ fruit.name }}
+        {{ index }}
+        <input type="text" />
+        </li>
+    </div>
+    </template>
+
+    <style></style>
+    ```
+
+    - こんな感じでfruit部分を分割代入できる
+    ```vue
+    <script setup>
+    import { ref } from 'vue'
+    const fruits = ref([
+    { id: 1, name: 'apple1' },
+    { id: 2, name: 'apple2' },
+    { id: 3, name: 'banana' },
+    { id: 4, name: 'grape' },
+    ])
+    </script>
+
+    <template>
+    <div>
+        <button @click="fruits.shift()">シフト</button>
+        <li v-for="({ id, name }, index) in fruits" :key="id">
+        {{ id }}
+        {{ name }}
+        {{ index }}
+        <input type="text" />
+        </li>
+    </div>
+    </template>
+
+    <style></style>
+    ```
+    - 基本的にv-forとv-ifは同じタグ内に書かないことが推奨。
+    - v-ifとかv-forで余計なタグ生成したくない時はやはｒtenplateタグ使うべき
+
+- オブジェクトに対してv-forする場合
+    - さっきはリストのv-forだったが今回はオブジェクトのv-for.
+    - ()内でvalue,key,indexなどとれる
+    ```vue
+    <script setup>
+    import { ref } from 'vue'
+    const me = ref({
+    id: 1,
+    name: 'tanaka',
+    age: 25,
+    gender: 'man',
+    })
+    </script>
+
+    <template>
+    <div>
+        <button @click="fruits.shift()">シフト</button>
+        <li v-for="(value, key, index) in me" :key="value">
+        {{ key }}
+        {{ value }}
+        {{ index }}
+        <input type="text" />
+        </li>
+    </div>
+    </template>
+
+    <style></style>
+
+    ```
+
+- 数値でv-forもできる
+    ```vue
+    <script setup>
+    import { ref } from 'vue'
+    </script>
+
+    <template>
+    <div>
+        <button @click="fruits.shift()">シフト</button>
+        <li v-for="n in 10" :key="n">
+        {{ n }}
+        <input type="text" />
+        </li>
+    </div>
+    </template>
+
+    <style></style>
+
+    ```
 ## 19章 (はじめに Vue2)
 - 1000分=16.8時間
 - 1日30分ずつで33日かかる計算。
@@ -800,65 +1076,6 @@ h1{
 
     <style></style>
     ```
-- class属性はこう指定する！
-    - :class="{}"って感じで書いて、その中にプロパティとtrue or falseを書く感じ。
-    ```vue
-    <script setup>
-    import { ref } from 'vue'
-    // const isRed = ref(true)
-    // const isBgBlue = ref(true)
-    // function toggleClass() {
-    //   isRed.value = false
-    //   isBgBlue.value = false
-    // }
-    </script>
-
-    <template>
-    <p :class="{ red: true, 'bg-blue': true }">Vuejs</p>
-    <button @click="toggleClass">kirikae</button>
-    </template>
-
-    <style>
-    .red {
-    color: red;
-    }
-
-    .bg-blue {
-    background-color: blue;
-    }
-    </style>
-
-    ```
-
-    - そのtrue,false部分をリアクティブにすることによって、動的に切り替えたりする
-    ```vue
-    <script setup>
-    import { ref } from 'vue'
-    const isRed = ref(true)
-    const isBgBlue = ref(true)
-    function toggleClass() {
-    isRed.value = !isRed.value
-    isBgBlue.value = !isBgBlue.value
-    }
-    </script>
-
-    <template>
-    <p :class="{ red: isRed, 'bg-blue': isBgBlue }">Vuejs</p>
-    <button @click="toggleClass">気r変え</button>
-    </template>
-
-    <style>
-    .red {
-    color: red;
-    }
-
-    .bg-blue {
-    background-color: blue;
-    }
-    </style>
-
-    ```
-
 # 20章（これがVuejsの基礎、テンプレート構文だ！ Vue2）
 - そもそもテンプレートとは何か
     - さっきのソースでいう、以下の部分
