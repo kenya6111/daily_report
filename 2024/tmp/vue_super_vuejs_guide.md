@@ -945,6 +945,245 @@ h1{
     <style></style>
 
     ```
+
+## 5章（コンポーネントはこう使う！）
+    - コンポーネントツリー、ルートコンポーネント
+    - DOMのようにコンポーネントを組み合わせて作られるhtmlの内容をコンポーネントツリーという。
+    - ルートコンオー年とはmain.jsのcreateAPpに渡してるコンポーネントのこと。
+
+    - 以下のようにして、丸々、カウントアップのコンポーネントを埋め込める
+    ```vue
+    <script setup>
+    import { ref } from 'vue'
+    import CountUp from './components/CountUp.vue'
+    const aaa = ref(0)
+    </script>
+    <template>
+    {{ aaa }}
+    <CountUp />
+    </template>
+    <style></style>
+    ```
+    - 先頭が大文字、ツナギも大文字＝パスカルケース
+
+## 6章
+    - propsで親から子にデータを渡し
+    ```vue  App.vue
+    <script setup>
+    import { ref } from 'vue'
+    import ShowCount from './components/ShowCount.vue'
+    const count = ref(0)
+    </script>
+    <template>
+    {{ count }}
+    <ShowCount :foo="count" />
+    </template>
+    <style></style>
+    ```
+    ```vue (ShowCount.vue)
+    <script setup>
+    import { defineProps } from 'vue'
+    defineProps({
+    foo: String,
+    })
+    </script>
+    <template>
+    <p>count:{{ foo }}</p>
+    </template>
+    ```
+
+    - こんな感じでprops受け取る際の型の中で色々デフォルト値とか方を複数許容するとかできる。
+    ```vue
+    <script setup>
+    import { defineProps } from 'vue'
+    defineProps({
+    foo: String,
+    bar: String,
+    hoge: {
+        type: [Number, String],
+        default: 100,
+    },
+    hoge2: {
+        type: [Number, String],
+        default: function () {
+        return 100
+        },
+    },
+    })
+    </script>
+    <template>
+        <p>count:{{ foo }}</p>
+        <p>count:{{ bar }}</p>
+        <p>count:{{ hoge }}</p>
+    </template>
+    ```
+    - defineProps() 関数は <script setup> を利用する場合のみ利用可能
+
+    - 以下みたいな感じで渡す：
+    ```vue (親コンポーネント側)
+    <script setup>
+    import { ref } from 'vue'
+    import CountUp from './components/CountUp.vue'
+    </script>
+    <template>
+    <div>
+        <CountUp message="Hello from parent!" />
+        <CountUp message="Hello from parent!!" />
+        <CountUp message="Hello from parent!!!" />
+    </div>
+    </template>
+
+    <style></style>
+    ```
+
+    ```vue (子コンポーネント側)
+    <script setup>
+    import { ref } from 'vue'
+    import { defineProps } from 'vue'
+
+    const props = defineProps({
+    message: String,
+    })
+    </script>
+
+    <template>
+    <div>
+        {{ message }}
+    </div>
+    </template>
+    <style></style>
+    ```
+
+    - こんな感じで動的に v-bind使って値を渡せる
+    ```vue
+    <script setup>
+    import { ref } from 'vue'
+    import CountUp from './components/CountUp.vue'
+    const dynamicMessage = ref('This can change!')
+    </script>
+    <template>
+    <div>
+        <CountUp message="Hello from parent!" />
+        <CountUp message="Hello from parent!!" />
+        <CountUp message="Hello from parent!!!" />
+        <CountUp :message="dynamicMessage" />
+    </div>
+    <button @click="dynamicMessage = 'aa'">ダイナミック文章変更</button>
+    </template>
+    <style></style>
+    ```
+
+    - emitで子から親にデータを渡す
+        - emitの場合はｐropsのように自由に値を渡せない。そうなると処理の流れが追いにくくなるから
+        - データの流れは親から子への一方通行に流れるのが基本button
+        - vueでは子から親へコードの流れが極力わかりにくくならない範囲に関して通信できるようになっている
+        - そこでイベントを使う
+        - vueでは子コンポーネントの中では$emitという関数を使うことができる
+
+        - emitの場合は、子コンポーネントの方で、例えばクリックしたときに親に渡したいなら、
+        - @click="$emit('〇〇')"のようにイベント名を設定して、
+        - 親コンポーネントの方で@〇〇=""って感じで設定したイベントを使うみたいな感じ
+
+        ```vue (App.vue)
+        <script setup>
+        import { ref } from 'vue'
+        import ResetButton from './components/ResetButton.vue'
+
+        const count = ref(0)
+        </script>
+        <template>
+        <div>
+            {{ count }}
+            <button @click="count++">カウントアップ</button>
+            <ResetButton @reset="count = 0" />
+        </div>
+        </template>
+        <style></style>
+        ```
+
+        - 
+        ```vue (ResetButton.vue)
+        <template>
+            <button @click="$emit('reset')">Reset</button>
+        </template>
+        ```
+
+        - このようにvueではカスタムの独自のイベントを子コンポーネントがわで
+        - 上記では子コンポ年と側でこういうイベントが発生しましたよってのを親コンポーネントに伝えているだけで
+        - その上で何をするかは親コンポーネント側が決めている
+
+        - ここでやっとデータを親に渡す方法〜〜
+            - 
+            ```vue (親)
+            <script setup>
+            import { ref } from 'vue'
+            import ResetButton from './components/ResetButton.vue'
+            const count = ref(0)
+            </script>
+            <template>
+            <div>
+                {{ count }}
+                <button @click="count++">カウントアップ</button>
+                <ResetButton @reset="count = $event" />　そんで$eventで親で受け取る。以上
+            </div>
+            </template>
+            <style></style>
+            ```
+
+            - 子側の$emit()の第二引数に渡すでー他を書く。
+            ```vue (子)
+            <template>
+                <button @click="$emit('reset', 100)">Reset</button>
+            </template>
+            ```
+
+            - ちなみにこんな風に@resetに関数を設定し、その関数で子コンポーネントからの値を受け取れる
+            ```vue
+            <script setup>
+            import { ref } from 'vue'
+            import ResetButton from './components/ResetButton.vue'
+            const count = ref(0)
+            function onReset(value) {
+                count.value = value
+            }
+            </script>
+            <template>
+            <div>
+                {{ count }}
+                <button @click="count++">カウントアップ</button>
+                <ResetButton @reset="onReset" />
+            </div>
+            </template>
+            <style></style>
+            ```
+
+            - このやり方に関してもpropsと違い勝手に親コンポーネント側のデータが更新されるということはなく、
+            - あくまでも。$emitのイベントが発生した時にデータを渡すだけで、それをどういうふうにそれをどういう風に使うかは、親コンポーネント側
+
+## 7章
+## 8章
+- 仮想DOM
+- Vueは最初にレンダリングしようとする際に、実際に書いたコンポーネントを全て解析して、
+- そっから一度、仮想的なjavascriptのDOMを作る。あくまでDOMのデータ構造を真似したものをｊｓのオブジェクト使って作る。
+- そのあと実際にDOMを作る
+- ここはアプリ全体の最初のレンダリングの時だけの話
+- そのあと、他のリアクティブな値が更新されたりして再レンダリングされる時、変更分の仮想DOMを含んだ新たな仮想DOMを作る
+- そして前回の仮想DOMと新しい方の仮想DOMを比較して差分を調べる。
+- そして差分のところだけど、実際のDOMに反映するような動きをしている
+
+- ここで、さっきの一番最初のまだ何もレンダリングされていない時に、初めて1つの仮装DOMを作って実際のDOMに反映するに反映するさセル処理
+- これをmountという。
+- また、マウント後に際レンダリング起きて新しい仮装DOMができて、前回の仮装DOMとの差分を検出し、その差分を本物のDOMに反映するこの一連の処理のことをpatchという。
+なのでvueは最初にマウントしてその後にpatchを繰り返すことによってDOMを更新する
+- ちなみにこの本物のDOMを操作する処理あ結構重い処理になる
+- 一方で仮装DOMは軽い処理。
+
+- さっき行ったマウントは仮装DOM全体に対して使っていたが、一方でコンポーネント単位で使いもする。
+- 例えば新たなコンポーネントができたら(例えばv-ifがfalseからtrueになってDOMが現れた)、このトき本物のDOMにもｐatchによって反映されるが
+- 今v-ifで現れたコンポーネントにとっては初めての最初のレンダリング初めての最初のレンダリングだよね。
+- なのでこのコンポーネントがマウントしたっていう。
+- なので、mountって言葉は、仮装DOM全体に対して最初の蓮台rングをする時と、各コンポーネントに対して最初にレンダリングする時の２パターンがある
+- 逆にv-ifがtrue→falseに
 ## 19章 (はじめに Vue2)
 - 1000分=16.8時間
 - 1日30分ずつで33日かかる計算。
