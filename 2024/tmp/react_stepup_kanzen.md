@@ -1,5 +1,10 @@
 ## 3章（レンダリングの仕組みとその最適化）
+- 再レンダリングが走るタイミング
+  - stateが更新されたコンポー年とは際レンダリング
+  - ｐropsが変更されたコンポーネントは際レンダリング
+  - 際レンダリングされたコンポーネントの子コンポーネントは際レンダリング
 - stateかわる→コンポーネントの再レンダリングが走る→その時に変更差分を検知して→画面に反映
+
 - 親コンポーネントが際レンダリングされても、ｐropsが変更されない限りは子コンポーネントが際レンダリングされないようにする。
   - memoでコンポーネントを描こう
   - propsが変更されない限りはこのコンポーネントは際レンダリングしないですよって意味になる
@@ -103,9 +108,8 @@
   ```
 
   - そんな時に使うのがuseCallback。
-    - 同じものを使いまわしてねって指示ができる。
+    - 第二引数が変わった場合のみ、第一引数の関数を再生成するって指示ができる。
     - useEffectと同じで第二引数の配列が見張る値。空であれば、最初に生成したものをずっと使うという設定になる。
-    - 
     ```jsx
     import { useCallback, useState } from "react";
     import { ChildArea } from "./ChildArea";
@@ -320,13 +324,14 @@
   - BrawserrouterDomタグで囲った配下でルーHTイングが有効化される仕組み
   - Linkタグがaタグっぽい実装をしている。(toはどのパスに飛ぶかって意味の実装)
   - Routesタグでどのパスの場合にどのコンポーネントを出すかの設定をする
+  - exactは、完全一致にしますよって感じのやつ。exactがないと、/配下のパスは全てｈomeのコンポーネントが表示されるようになってしまう
   ```jsx
-  import { BrowserRouter, Link, Routes, Route } from "react-router-dom";
-
   import { Home } from "./Home";
   import { Page1 } from "./Page1";
   import { Page2 } from "./Page2";
   import "./styles.css";
+  import { BrowserRouter, Link, Switch } from "react-router-dom";
+  import { Route } from "react-router-dom/cjs/react-router-dom.min";
 
   export default function App() {
     return (
@@ -337,41 +342,35 @@
           <Link to="/page1">Page1</Link>
           <br />
           <Link to="/page2">Page2</Link>
-          <Home />
-          <Page1 />
-          <Page2 />
         </div>
-        <Routes>
-          <Route exact path="/" element={<Home />} />
-          <Route path="/page1" element={<Page1 />} />
-          <Route path="/page2" element={<Page2 />} />
-        </Routes>
+        <Switch>
+          <Route exact path="/">
+            <Home />
+          </Route>
+          <Route path="/page1">
+            <Page1 />
+          </Route>
+          <Route path="/page2">
+            <Page2 />
+          </Route>
+        </Switch>
       </BrowserRouter>
     );
   }
-
   ```
 
 - ネストされたページ遷移
-  - ちなみにreact-router-dom:6.30.0を使用
-
-  - propsの渡し方、受け取り方
-    - 親側ではいつも通りタグに渡す変数を記載。
-    - 受け取るこコンポーネント側ではpropsで引数として受け取り、中身を参照して出力。
     - App.js
     ```js
-      import { BrowserRouter, Link, Routes, Route } from "react-router-dom";
-
       import { Home } from "./Home";
       import { Page1 } from "./Page1";
-      import { Page1DetailA } from "./Page1DetailA";
-      import { Page1DetailB } from "./Page1DetailB";
       import { Page2 } from "./Page2";
       import "./styles.css";
+      import { BrowserRouter, Link, Switch, Route } from "react-router-dom";
+      import { Page1DetailA } from "./Page1DetailA";
+      import { Page1DetailB } from "./Page1DetailB";
 
       export default function App() {
-        const homeMessage = "Welcome to the Home Page!";
-        const page1Message = "Welcome to the page1Message Page!";←ここ！！！！！！
         return (
           <BrowserRouter>
             <div className="App">
@@ -381,318 +380,391 @@
               <br />
               <Link to="/page2">Page2</Link>
             </div>
-
-            <Routes>
-              <Route path="/" element={<Home message={homeMessage} />} />
-              <Route path="/page1/*" element={<Page1 message={page1Message} />} />←ここ！！！！！！
-              <Route path="/page1/detailA" element={<Page1DetailA />} />
-              <Route path="/page1/detailB" element={<Page1DetailB />} />
-              <Route path="/page2/*" element={<Page2 />} />
-            </Routes>
+            <Switch>
+              <Route exact path="/">
+                <Home />
+              </Route>
+              <Route
+                path="/page1"
+                render={({ match: { url } }) => (
+                  <Switch>
+                    {console.log(url)}
+                    <Route exact path={url}>
+                      <Page1 />
+                    </Route>
+                    <Route exact path={`/${url}/detailA`}>
+                      <Page1DetailA />
+                    </Route>
+                    <Route exact path={`/${url}/detailB`}>
+                      <Page1DetailB />
+                    </Route>
+                  </Switch>
+                )}
+              />
+              <Route path="/page2">
+                <Page2 />
+              </Route>
+            </Switch>
           </BrowserRouter>
         );
       }
-    ```
 
+    ```
     - Page1.jsx
     ```jsx
-    import {
-      BrowserRouter,
-      Link,
-      Routes,
-      Route,
-      Outlet,
-      useParams,
-    } from "react-router-dom";
-    import { Page1DetailA } from "./Page1DetailA";
-    import { Page1DetailB } from "./Page1DetailB";
-    export const Page1 = (props) => {←ここ！！！！！！
+    import { BrowserRouter, Link, Switch } from "react-router-dom";
+    export const Page1 = () => {
       return (
         <div>
-          <h1>Page1ページです</h1>
-          <p>{props.message}</p>←ここ！！！！！！
-
-
+          <h1>Page1desu---</h1>
+          <Link to="/page1/detailA">DetailA</Link>
           <br />
-          <Link to="detailA" replace>
-            detailA
-          </Link>
-          <br />
-          <Link to="detailB" replace>
-            detailB
-          </Link>
-        </div>
-      );
-    };
-
-    ```
-
-  - Routes以下の切り出し、整理
-    - src/App.jsx
-    ```jsx
-    import { BrowserRouter, Link, Routes, Route } from "react-router-dom";
-    import { Router } from "./router/Router";
-
-    import "./styles.css";
-
-    export default function App() {
-      return (
-        <BrowserRouter>
-          <div className="App">
-            <Link to="/">Home</Link>
-            <br />
-            <Link to="/page1">Page1</Link>
-            <br />
-            <Link to="/page2">Page2</Link>
-          </div>
-          <Router />
-        </BrowserRouter>
-      );
-    }
-
-    ```
-    - src/router/Router.jsx
-    ```jsx
-    import { BrowserRouter, Link, Routes, Route } from "react-router-dom";
-
-    import { Home } from "../Home";
-    import { Page1 } from "../Page1";
-    import { Page1DetailA } from "../Page1DetailA";
-    import { Page1DetailB } from "../Page1DetailB";
-    import { Page2 } from "../Page2";
-    import { page1Routes } from "./Page1Routes";
-
-    export const Router = () => {
-      const homeMessage = "Welcome to the Home Page!";
-      const page1Message = "Welcome to the page1Message Page!";
-      return (
-        <Routes>
-          {page1Routes.map((route) => {
-            return (
-              <Route key={route.path} path={route.path} element={route.children} />
-            );
-          })}
-        </Routes>
-      );
-    };
-    ```
-
-    - src/router/Page1Routes.jsx
-    ```jsx
-    import { Home } from "../Home";
-    import { Page1 } from "../Page1";
-    import { Page1DetailA } from "../Page1DetailA";
-    import { Page1DetailB } from "../Page1DetailB";
-    import { Page2 } from "../Page2";
-
-    export const page1Routes = [
-      {
-        path: "",
-        children: <Home />,
-      },
-      {
-        path: "/page1",
-        children: <Page1 />,
-      },
-      {
-        path: "/page1/detailA",
-        children: <Page1DetailA />,
-      },
-      {
-        path: "/page1/detailB",
-        children: <Page1DetailB />,
-      },
-      {
-        path: "/page2",
-        children: <Page2 />,
-      },
-    ];
-    ```
-  - URLパラメータを使う
-    - 結論、パスに「:id」とかを入れるやつ。クエリパラメータとは違う
-    - 結局はファイルごとに分割してよみこんでるだけ。１ファイルで書こうと思えば全然書ける。
-    - Linkがaタグみたいな役割で、Routesがこのパスの時にこのコンポーネント表示しますよって設定するやつ
-    - いかでは「https://kjkymc.csb.app/page2/100」とかにアクセス時にパラメータ渡される
-    - src/router/Router.jsx
-    ```jsx
-    import { Routes, Route } from "react-router-dom";
-    import { page1Routes } from "./Page1Routes";
-    import { page2Routes } from "./Page2Routes";
-
-    export const Router = () => {
-      return (
-        <Routes>
-          {page1Routes.map((route) => {
-            return (
-              <Route key={route.path} path={route.path} element={route.children} />
-            );
-          })}
-          {page2Routes.map((route) => {
-            return (
-              <Route key={route.path} path={route.path} element={route.children} />
-            );
-          })}
-        </Routes>
-      );
-    };
-
-    ```
-
-    - src/router/Page2Routes.jsx
-    ```jsx
-    import { Page2 } from "../Page2";
-    import { UrlParameter } from "../UrlParameter";
-
-    export const page2Routes = [
-      {
-        path: "/page2",
-        children: <  />,
-      },
-      {
-        path: "/page2/:id", ←ここ！！
-        children: <UrlParameter />,
-      },
-    ];
-    ```
-
-    - src/UrlParameters.jsx
-    ```jsx
-    import { useParams } from "react-router-dom";
-    export const UrlParameter = () => {
-      const { id } = useParams();
-      return (
-        <div>
-          <h1>UrlParameterです</h1>
-          <p>パラメータは{id}です</p>
+          <Link to="/page1/detailB">DetailB</Link>
         </div>
       );
     };
     ```
 
-  - クエリパラメータを使う
-    - クエリパラメータの扱い方を記載。
-    - src/UrlParameter.jsx
+    - Page1DetailA.jsx
     ```jsx
-    import { useParams, useLocation } from "react-router-dom";
-    export const UrlParameter = () => {
-      const { id } = useParams();
-      const { search } = useLocation(); // クエリパラメータ取得できるやつ
-      const query = new URLSearchParams(search); // クエリパラメータを扱うための便利なメソッドを提供するやつ
-      console.log(search);
-      console.log(query);
-      return (
-        <div>
-          <h1>UrlParameterです</h1>
-          <p>パラメータは{id}です</p>
-          <p>パラメータは{query.get("name")}です</p> //←これ追加！！！！！！！！！！！！！！！！！！！！
-        </div>
-      );
-    };
-    ```
-  
-  - state
-    - コンポーネントの状態を渡したいなーってときは、タグのto属性の他、state属性をつけて
-    - 受け取るときはuseLocation()を使って受け取る
-    - src/Page1.jsx
-    ```jsx
-    import {
-      BrowserRouter,
-      Link,
-      Routes,
-      Route,
-      Outlet,
-      useParams,
-    } from "react-router-dom";
-    import { Page1DetailA } from "./Page1DetailA";
-    import { Page1DetailB } from "./Page1DetailB";
-    export const Page1 = (props) => {
-      const arr = [...Array(100).keys()];
-      return (
-        <div>
-          <h1>Page1ページです</h1>
-          <p>{props.message}</p>
-          <br />
-          <Link to="detailA">detailA</Link>
-          <br />
-          <Link to="detailB">detailB</Link>
-          <br />
-
-          <Link to="detailA" state={arr}> ←ここ追加！！！！！
-            detailA(state)
-          </Link>
-        </div>
-      );
-    };
-    ```
-
-    - src/Page1Detail.jsx
-    ```jsx
-    import { useLocation } from "react-router-dom";
-
     export const Page1DetailA = () => {
-      const { state } = useLocation();←ここ追加！！！！！
-      console.log(state);←ここ追加！！！！！
       return (
         <div>
-          <h1>Page1DetailAです！</h1>
+          <h1>Page1DetailAdesu---</h1>
         </div>
       );
     };
     ```
-    
-  - useNavigate
-    - Linｋを使わずに、ｊｓから画面遷移する場合はこれ使う。
-    - 
+
+    - Page1DetailB.jsx
     ```jsx
-    import { BrowserRouter, Link, useNavigate } from "react-router-dom";
-    export const Page1 = (props) => {
-      const arr = [...Array(100).keys()];
-      const navigate = useNavigate();←ここ追加！！！！！
-      const onClickDetailA = () => navigate("detailA");←ここ追加！！！！！
+    export const Page1DetailB = () => {
       return (
         <div>
-          <h1>Page1ページです</h1>
-          <p>{props.message}</p>
-          <br />
-          <Link to="detailA">detailA</Link>
-          <br />
-          <Link to="detailB">detailB</Link>
-          <br />
-
-          <Link to="detailA" state={arr}>
-            detailA(state)
-          </Link>
-          <br />
-          <button onClick={onClickDetailA}>DetailA</button>←ここ追加！！！！！
+          <h1>Page1DetailBdesu---</h1>
         </div>
       );
     };
-
     ```
 
+- URLパラメータ
+  Page2のURLparameterをクリック時にパラメータを表示する
 
+  - App.js
+  ```jsx
+  import "./styles.css";
+  import { BrowserRouter, Link } from "react-router-dom";
+  import { Router } from "./router/Router";
+
+  export default function App() {
+    return (
+      <BrowserRouter>
+        <div className="App">
+          <Link to="/">Home</Link>
+          <br />
+          <Link to="/page1">Page1</Link>
+          <br />
+          <Link to="/page2">Page2</Link>
+        </div>
+        <Router />
+      </BrowserRouter>
+    );
+  }
+  ```
+
+  - Router.jsx
+  ```jsx
+  import { Home } from "../Home";
+  import { Switch, Route } from "react-router-dom";
+  import { page1Routes } from "./Page1Routes";
+  import { page2Routes } from "./Page2Routes";
+  export const Router = () => {
+    return (
+      <Switch>
+        <Route exact path="/">
+          <Home />
+        </Route>
+        <Route
+          path="/page1"
+          render={({ match: { url } }) => (
+            <Switch>
+              {page1Routes.map((route) => (
+                <Route
+                  key={route.path}
+                  exact={route.exact}
+                  path={`${url}${route.path}`}
+                >
+                  {route.children}
+                </Route>
+              ))}
+            </Switch>
+          )}
+        />
+        <Route
+          path="/page2"
+          render={({ match: { url } }) => (
+            <Switch>
+              {page2Routes.map((route) => (
+                <Route
+                  key={route.path}
+                  exact={route.exact}
+                  path={`${url}${route.path}`}
+                >
+                  {route.children}
+                </Route>
+              ))}
+            </Switch>
+          )}
+        />
+      </Switch>
+    );
+  };
+  ```
+  - Page2Routes.jsx
+  ```jsx
+  import { Page2 } from "../Page2";
+  import { URLParameter } from "../URLParameter";
+
+  export const page2Routes = [
+    {
+      path: "/",
+      exact: true,
+      children: <Page2 />,
+    },
+    {
+      path: "/:id",
+      exact: false,
+      children: <URLParameter />,
+    },
+  ];
+  ```
+
+
+  - Page2.jsx
+  ```jsx
+  import { Link } from "react-router-dom";
+  export const Page2 = () => {
+    return (
+      <div>
+        <h1>Page2desu---</h1>
+        <Link to="page2/100">URL parameter</Link>
+      </div>
+    );
+  };
+  ```
+
+
+- クエリパラメータ
+  - リーティング自体に特別な設定は必要ない
+
+  - Page2.jsx
+  ```jsx
+  import { Link } from "react-router-dom";
+  export const Page2 = () => {
+    return (
+      <div>
+        <h1>Page2desu---</h1>
+        <Link to="page2/100">URL parameter</Link>
+        <br />
+        <Link to="page2/100?name=hogehoge">Query parameter</Link>
+      </div>
+    );
+  };
+  ```
+
+  - UrlParameter.jsx
+  ```jsx
+  import { useParams, useLocation } from "react-router-dom";
+  export const URLParameter = () => {
+    const { id } = useParams();
+    const location = useLocation();
+    console.log(location);
+    return (
+      <div>
+        <h1>URLparameterpagedesu!</h1>
+        <p>パラメータ{id}</p>
+      </div>
+    );
+  };
+  ```
+
+  - 上記のような感じで書くとlocationのsearch にクエリパラメータが入ってくる
+  ```txt
+  {pathname: '/page2/100', search: '?name=hogehoge', hash: '', state: undefined}
+  hash: ""
+  pathname: "/page2/100"
+  search: "?name=hogehoge"
+  state: undefined
+  [[Prototype]]: Object
+  ```
+
+
+  - 最初から以下のように展開して代入すれば楽
+  ```jsx
+  import { useParams, useLocation } from "react-router-dom";
+  export const URLParameter = () => {
+    const { id } = useParams();
+    const { search } = useLocation();
+    console.log(search);
+    return (
+      <div>
+        <h1>URLparameterpagedesu!</h1>
+        <p>パラメータ{id}</p>
+      </div>
+    );
+  };
+
+  ```
+
+  - URLparameter.jsx
+    - react-router-domから、useParamsを使って受け取ることができる
+  ```jsx
+  import { useParams } from "react-router-dom";
+  export const URLParameter = () => {
+    const { id } = useParams();
+    return (
+      <div>
+        <h1>URLparameterpagedesu!</h1>
+        <p>パラメータ{id}</p>
+      </div>
+    );
+  };
+  ```
+
+
+  - URLParameter.jsx
+    - こんな感じでクエリパラメータを取り出せる
+  ```jsx
+  import { useParams, useLocation } from "react-router-dom";
+  export const URLParameter = () => {
+    const { id } = useParams();
+    const { search } = useLocation();
+    const query = new URLSearchParams(search);
+    console.log(query);
+    return (
+      <div>
+        <h1>URLparameterpagedesu!</h1>
+        <p>パラメータ{id}</p>
+        <p>クエリー{query.get("name")}</p>
+      </div>
+    );
+  };
+
+  ```
+
+
+- stateを渡すページ遷移
+  - page1で取得した情報をpage1Detailに渡すという感じで行く
+  - Linkタグ（aタグ的なやつ）のto属性にオブジェクトでいろいろ設定値を含んだ値を設定できる
+  - Page1.jsx
+  ```jsx
+  import { BrowserRouter, Link, Switch } from "react-router-dom";
+  export const Page1 = () => {
+    const arr = [...Array(100).keys()];
+    console.log(arr);
+    return (
+      <div>
+        <h1>Page1desu---</h1>
+        <Link to={{ pathname: "/page1/detailA", state: arr }}>DetailA</Link>
+        <br />
+        <Link to="/page1/detailB">DetailB</Link>
+      </div>
+    );
+  };
+  ```
+
+  - stateで渡ってきた情報を受け取るときは、useLocationで受け取ることができる
+  - Page1DetailA
+  ```jsx
+  import { useLocation } from "react-router-dom";
+  export const Page1DetailA = () => {
+    const { state } = useLocation();
+    console.log(state);
+    return (
+      <div>
+        <h1>Page1DetailAdesu---</h1>
+      </div>
+    );
+  };
+  ```
+
+- Linkを使わないページ遷移
+  - button押した時にDetailAに遷移する方法を解説
+  - useHistoryというフックを使えば、ボタン押下時に画面遷移！とかが実現できる
+  - useHistoryから値を取り出してpushするだけ
+  - Page1.jsx
+  ```jsx
+  import { BrowserRouter, Link, Switch, useHistory } from "react-router-dom";
+  export const Page1 = () => {
+    const arr = [...Array(100).keys()];
+    console.log(arr);
+    const history = useHistory();
+    const onClickDetailA = () => {
+      history.push("/page1/detailA");
+    };
+    return (
+      <div>
+        <h1>Page1desu---</h1>
+        <Link to={{ pathname: "/page1/detailA", state: arr }}>DetailA</Link>
+        <br />
+        <Link to="/page1/detailB">DetailB</Link>
+        <br />
+        <button onClick={onClickDetailA}>DetailA</button>
+      </div>
+    );
+  };
+  ```
+
+  - なんでhistoryって名前なん？？
+  ```txt
+  ✅ なぜ「history」という名前なの？
+  これは、React Router が HTML5の History API（window.history）をラップして使ってるからなんです。
+
+  🔍 そもそも History API って何？
+  ブラウザが持ってる機能で、例えば以下のようなことができます：
+  window.history.pushState(...) → URLを変える（けどページはリロードしない）
+  window.history.back() → 前のページに戻る
+  window.history.forward() → 次のページへ
+
+  つまり、「ユーザーの移動履歴（＝History）を管理する仕組み」のこと！
+  React Router はこれをベースにルーティングしてるから、useHistory っていう名前になってるわけ。
+
+  💡 React Router v6 以降では…
+  ちなみに、React Router v6 からは useHistory じゃなくて useNavigate っていう名前に変わりました！
+
+  理由はまさに君の疑問と同じで、「historyって名前、ちょっと意味わかりづらくね？」って声が多かったから！
+
+  jsx
+  // React Router v6
+  import { useNavigate } from "react-router-dom";
+  const navigate = useNavigate();
+  navigate("/page1/detailA");
+  ```
 ## 6章（Atomic design）
   - Atomic designとは
     - BradFrostが考案したデザインシステム
     - 画面要素を５段階に分け組み合わせることでUIを実現
     - コンポーネント化された要素が画面を構成してるという考え方
     - Atom, molecule, organism, template ,Pages
-      - Atom（原子）
+      - Atom（原子）水素とかの原子記号
         - それ以上分解できない要素（ボタン、テキスト入力部分、アイコンなどなど）
-      - molecule(分子)
+      - molecule(分子)h2o
         - Atomの組み合わせで意味を持つパーツ
         - アイコン＋メニュー名
         - プロフィール画像＋テキストボックス
       - organism(有機体)
         - AtomやMoleculeの塊で意味を持つ要素群
-        - twitterのサイドバーのメニュー
+        - twitterのサイドバーのメニュー欄
         - 1つのツイートエリア
+        - 1つのツイート
       - template(ページのレイアウトを表現する要素)
-        - 実際のデータは持たない
+        - 実際のデータは持たない 
         - サイドメニュー、センターエリア、トピックwリアなど領域のこと？ワイヤーフレームの各領域のことかな
-      - page遷移ごとにほゆじされる各画面
+      - page
+        - 最終的に表示される１画面
+        - 遷移ごとにほゆじされる各画面
   - Atomic design で分割していく時に大事な考え方が、このコンポーネントの役割はなんなのかということ。
-    - 画面の主要となるボタンのデザインを定義して、そのボタンに表示する文言は変数で受け取って、コンポーネントを使い回すってやり方でアトム作ったりする
+    - 画面の主要となるボタンのデザインを定義して、そのボタンに表示する文言(ラベル)は変数で受け取って、コンポーネントを使い回すってやり方でアトム作ったりする
   - 一旦Atomであるbuttonコンポーネントを作ってみる
     - App.jsx
     ```jsx
@@ -830,4 +902,45 @@
     ```
 
   - Organism
-    - 
+    - ユーザーのプロフィールカードくらいのまとまり感。有機体。
+    - organismsのフォルダは配下にはどの属性の有機体かのフォルダを作っていく
+
+
+## 7章
+- グローバルばstate
+  - どのコンポーネントやページからでも参照でき、どのページからでも更新できる
+  - useStateはそのコンポーネント内で使えてpropsで渡すなどしているが。
+  
+
+
+
+## 8章
+JSON Placeholder
+
+- 「https://jsonplaceholder.typicode.com/todos/1」のようにJSONを返すURLを公開してくれていて、
+- とりあえずAPI読んでデータ取れるか確認したいって時に使う 
+
+- 以下のような感じでaxiosを使ってデータを撮ってこれる
+- このようにわざわざバックエンドのサーバ立てずとも、データの取得を試せる
+```jsx
+import "./styles.css";
+import axios from "axios";
+export default function App() {
+  const onClickusers = () => {
+    axios
+      .get("https://jsonplaceholder.typicode.com/todos")
+      .then((res) => {
+        console.log(res);
+      })
+      .catch((err) => {
+        console.log(err);
+      });
+  };
+  return (
+    <div className="App">
+      <button onClick={onClickusers}>users</button>
+    </div>
+  );
+}
+
+```
