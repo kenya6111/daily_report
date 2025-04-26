@@ -944,3 +944,8 @@ export default function App() {
 }
 
 ```
+
+
+## 12章
+- memoってなんだっけ
+- VFCってなんだっけ
